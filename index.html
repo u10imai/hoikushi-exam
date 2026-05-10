@@ -1,387 +1,371 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="ja">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2575.7">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Helvetica; min-height: 17.0px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保育士試験対策システム - Professional Learning Suite</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* --- 1. コア・デザイン・システム --- */
+        :root {
+            --primary-blue: #005088;
+            --accent-emerald: #11CAA0;
+            --bg-cream: #F3F0DF;
+            --text-dark: #121212;
+            --text-muted: #4A5568;
+            --white: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background-color: #E2E8F0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            padding: 40px 0;
+            font-family: 'DM Sans', sans-serif;
+            color: var(--text-dark);
+        }
+
+        .slide-container {
+            width: 1280px;
+            max-width: 95%; /* スマホ対応 */
+            height: 720px;
+            max-height: 90vh; /* スマホ対応 */
+            background-color: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            overflow: auto; /* コンテンツが多い場合はスクロール */
+            display: none; /* 初期は非表示 */
+            flex-direction: column;
+            padding: 40px;
+            position: relative;
+        }
+
+        .slide-active { display: flex !important; }
+
+        /* --- 2. タイポグラフィ --- */
+        h1, h2, h3 { font-family: 'Merriweather', serif; font-weight: 700; }
+        
+        .slide-title {
+            font-size: 36px;
+            color: var(--primary-blue);
+            margin-bottom: 30px;
+            border-left: 8px solid var(--accent-emerald);
+            padding-left: 20px;
+        }
+
+        p, li { font-size: 18px; line-height: 1.6; color: var(--text-muted); }
+
+        /* --- 3. レイアウト・コンポーネント --- */
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+
+        /* グリッド・タイル */
+        .tiled-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .tile {
+            background-color: var(--bg-cream);
+            padding: 25px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-color: var(--primary-blue);
+        }
+
+        .tile i { font-size: 36px; color: var(--primary-blue); margin-bottom: 15px; }
+
+        /* 入力フォーム */
+        .input-group { max-width: 500px; margin: 0 auto; width: 100%; text-align: center; }
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border-radius: 8px;
+            border: 2px solid #CBD5E0;
+            margin-bottom: 25px;
+            font-family: inherit;
+        }
+
+        /* クイズ画面 */
+        .question-box { background: var(--bg-cream); padding: 30px; border-radius: 20px; margin-bottom: 25px; }
+        .options-grid { display: grid; gap: 15px; }
+        .option-btn {
+            background: var(--white);
+            border: 2px solid var(--primary-blue);
+            padding: 18px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            line-height: 1.4;
+        }
+        .option-btn:hover { background: var(--primary-blue); color: var(--white); }
+
+        /* ボタン */
+        .cta-button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: 700;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            align-self: center;
+        }
+
+        .cta-button:disabled { background-color: #A0AEC0; cursor: not-allowed; }
+
+        /* 結果表示 */
+        .score-number { font-size: 100px; color: var(--accent-emerald); font-weight: 700; text-align: center; }
+
+        /* スマホ用調整 */
+        @media (max-width: 768px) {
+            h1 { font-size: 40px !important; }
+            .slide-title { font-size: 28px; }
+            .score-number { font-size: 80px; }
+            .slide-container { padding: 20px; }
+        }
+    </style>
 </head>
 <body>
-<p class="p1">&lt;!DOCTYPE html&gt;</p>
-<p class="p1">&lt;html lang="ja"&gt;</p>
-<p class="p1">&lt;head&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;保育士試験対策システム - Professional Learning Suite&lt;/title&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&amp;family=Merriweather:wght@400;700&amp;display=swap" rel="stylesheet"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* --- 1. コア・デザイン・システム --- */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>:root {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--primary-blue: #005088;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--accent-emerald: #11CAA0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--bg-cream: #F3F0DF;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--text-dark: #121212;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--text-muted: #4A5568;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>--white: #FFFFFF;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>* { box-sizing: border-box; margin: 0; padding: 0; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: #E2E8F0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 40px 0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'DM Sans', sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: var(--text-dark);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.slide-container {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 1280px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-width: 95%; /* スマホ対応 */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>height: 720px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>max-height: 90vh; /* スマホ対応 */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--white);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 12px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 20px 40px rgba(0,0,0,0.15);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>overflow: auto; /* コンテンツが多い場合はスクロール */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: none; /* 初期は非表示 */</p>
-<p class="p1"><span class="Apple-converted-space">            </span>flex-direction: column;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>position: relative;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.slide-active { display: flex !important; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* --- 2. タイポグラフィ --- */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>h1, h2, h3 { font-family: 'Merriweather', serif; font-weight: 700; }</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.slide-title {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 36px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: var(--primary-blue);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 30px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-left: 8px solid var(--accent-emerald);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding-left: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>p, li { font-size: 18px; line-height: 1.6; color: var(--text-muted); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* --- 3. レイアウト・コンポーネント --- */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* グリッド・タイル */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.tiled-content {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>display: grid;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));</p>
-<p class="p1"><span class="Apple-converted-space">            </span>gap: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.tile {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--bg-cream);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: transform 0.2s, box-shadow 0.2s;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid transparent;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.tile:hover {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transform: translateY(-5px);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 10px 20px rgba(0,0,0,0.05);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-color: var(--primary-blue);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.tile i { font-size: 36px; color: var(--primary-blue); margin-bottom: 15px; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* 入力フォーム */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.input-group { max-width: 500px; margin: 0 auto; width: 100%; text-align: center; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>input[type="email"] {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #CBD5E0;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>margin-bottom: 25px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-family: inherit;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* クイズ画面 */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.question-box { background: var(--bg-cream); padding: 30px; border-radius: 20px; margin-bottom: 25px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.options-grid { display: grid; gap: 15px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.option-btn {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background: var(--white);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid var(--primary-blue);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 18px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>text-align: left;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 16px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.2s;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>line-height: 1.4;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.option-btn:hover { background: var(--primary-blue); color: var(--white); }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* ボタン */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cta-button {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--primary-blue);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>color: var(--white);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>padding: 15px 40px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-size: 20px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>font-weight: 700;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 50px;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>align-self: center;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>.cta-button:disabled { background-color: #A0AEC0; cursor: not-allowed; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* 結果表示 */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>.score-number { font-size: 100px; color: var(--accent-emerald); font-weight: 700; text-align: center; }</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>/* スマホ用調整 */</p>
-<p class="p1"><span class="Apple-converted-space">        </span>@media (max-width: 768px) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>h1 { font-size: 40px !important; }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.slide-title { font-size: 28px; }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.score-number { font-size: 80px; }</p>
-<p class="p1"><span class="Apple-converted-space">            </span>.slide-container { padding: 20px; }</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
-<p class="p1">&lt;/head&gt;</p>
-<p class="p1">&lt;body&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="slide-container slide-active" id="slide-intro" style="background-color: var(--primary-blue); color: var(--white); justify-content: center; align-items: center; text-align: center;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div style="max-width: 900px;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;h1 style="font-size: 64px; margin-bottom: 20px; color: var(--bg-cream);"&gt;保育士国家資格&lt;br&gt;対策演習システム&lt;/h1&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;p style="font-size: 24px; color: var(--white); opacity: 0.9;"&gt;Professional Exam Preparation Suite v1.0&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;hr style="width: 80px; border: 2px solid var(--accent-emerald); margin: 30px auto;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;button class="cta-button" onclick="goToSlide('slide-user')" style="background-color: var(--accent-emerald);"&gt;システムを開始する&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="slide-container" id="slide-user"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h2 class="slide-title"&gt;利用者情報の登録&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="content-area"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="input-group"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;p style="margin-bottom: 30px;"&gt;演習結果のレポートを受け取るための&lt;br&gt;メールアドレスを入力してください。&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;input type="email" id="student-email" placeholder="email@example.com" required&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="cta-button" onclick="saveUser()"&gt;登録して次へ&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="slide-container" id="slide-subjects"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h2 class="slide-title"&gt;演習科目の選択&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="content-area"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="tiled-content"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" onclick="selectSubject('教育原理')"&gt;&lt;i class="fa-solid fa-book-open"&gt;&lt;/i&gt;&lt;h3&gt;教育原理&lt;/h3&gt;&lt;p&gt;思想・歴史・制度&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" style="opacity: 0.5;"&gt;&lt;i class="fa-solid fa-users-rectangle"&gt;&lt;/i&gt;&lt;h3&gt;保育原理&lt;/h3&gt;&lt;p&gt;(準備中)&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" style="opacity: 0.5;"&gt;&lt;i class="fa-solid fa-heart"&gt;&lt;/i&gt;&lt;h3&gt;社会的養護&lt;/h3&gt;&lt;p&gt;(準備中)&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" style="opacity: 0.5;"&gt;&lt;i class="fa-solid fa-baby"&gt;&lt;/i&gt;&lt;h3&gt;保育の心理学&lt;/h3&gt;&lt;p&gt;(準備中)&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" style="opacity: 0.5;"&gt;&lt;i class="fa-solid fa-stethoscope"&gt;&lt;/i&gt;&lt;h3&gt;子どもの保健&lt;/h3&gt;&lt;p&gt;(準備中)&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="tile" onclick="selectSubject('MIX')" style="background-color: var(--accent-emerald); color: white;"&gt;&lt;i class="fa-solid fa-shuffle" style="color: white;"&gt;&lt;/i&gt;&lt;h3&gt;全科目MIX&lt;/h3&gt;&lt;p&gt;総合演習モード&lt;/p&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;p style="margin-top: 30px; text-align: center; color: var(--text-muted); font-size: 14px;"&gt;※MIXモードは登録済みの全問題からランダムに出題されます。&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="slide-container" id="slide-quiz"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h2 class="slide-title" id="quiz-title"&gt;問題演習：教育原理&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="content-area"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="progress-bar" style="height: 6px; background: #E2E8F0; width: 100%; margin-bottom: 20px; border-radius: 3px;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;div id="progress-fill" style="height: 100%; background: var(--accent-emerald); width: 0%; border-radius: 3px; transition: width 0.3s;"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="question-box"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;p id="question-text" style="font-weight: 700; color: var(--primary-blue); font-size: 20px;"&gt;問題文をロード中...&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div id="options-container" class="options-grid"&gt;&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;div class="slide-container" id="slide-result"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;h2 class="slide-title"&gt;演習結果の要約&lt;/h2&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="content-area" style="text-align: center;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;p style="font-size: 20px; margin-bottom: 20px;"&gt;お疲れ様でした！今回のスコアは：&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="score-number" id="final-score"&gt;0&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;p style="font-size: 20px; color: var(--primary-blue); margin-top: 20px;"&gt;正答率: &lt;span id="accuracy"&gt;0&lt;/span&gt;%&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;"&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="cta-button" id="submit-btn" onclick="sendToGAS()"&gt;結果を送信して終了&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>&lt;button class="cta-button" onclick="location.reload()" style="background: var(--bg-cream); color: var(--primary-blue);"&gt;TOPに戻る&lt;/button&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>&lt;p id="status-msg" style="margin-top: 20px; font-weight: bold; color: var(--accent-emerald); display: none;"&gt;送信完了しました。メールをご確認ください。&lt;/p&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
-<p class="p1">&lt;/div&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;script&gt;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>/* --- アプリケーション・ロジック --- */</p>
-<p class="p2"><span class="Apple-converted-space">    </span></p>
-<p class="p1"><span class="Apple-converted-space">    </span>// ★ここを書き換えてください★</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const GAS_URL = "https://script.google.com/macros/s/AKfycbxlPEB45mhyOoe13EqzuVMrsS-jzw9ey2KKCrKij_ERqgM0zN186bOL4WZpTKRxwSqr/exec";</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>// 科目別データ</p>
-<p class="p1"><span class="Apple-converted-space">    </span>const masterData = {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>"教育原理": [</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"question": "次の文にあてはまる人物として、正しいものを一つ選びなさい。江戸時代初期の儒学者。日本における陽明学の祖とされ、「近江聖人」と呼ばれた。『翁問答』を著す。",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"options": ["中江藤樹", "伊藤仁斎", "緒方洪庵", "林羅山", "貝原益軒"],</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"answer": 0,</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"explanation": "中江藤樹は、近江国（滋賀県）の儒学者で、日本の陽明学の祖です。"</p>
-<p class="p1"><span class="Apple-converted-space">            </span>},</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"question": "1879（明治12）年に公布された、学制に代わる教育基本法制で、町村に学務委員を置くこととした法令は？",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"options": ["小学校令", "教育勅語", "教育令", "学制", "教育基本法"],</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"answer": 2,</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"explanation": "「教育令」は1879年に公布され、自由主義的な傾向を持っていました。"</p>
-<p class="p1"><span class="Apple-converted-space">            </span>},</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"question": "モンテッソーリの『幼児の秘密』にて、恩物を用いた活動について言及されている、19世紀ドイツの教育者は？",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"options": ["ルソー", "フレーベル", "ペスタロッチ", "アリエス", "デューイ"],</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"answer": 1,</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"explanation": "フレーベルは恩物（Gaben）を考案した世界初の幼稚園創設者です。"</p>
-<p class="p1"><span class="Apple-converted-space">            </span>},</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"question": "日本において最も早く体系的ともいえる教育論をまとめた儒学者で、「日本のロック」と称され、『和俗童子訓』を著したのは？",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"options": ["荻生徂徠", "貝原益軒", "佐藤信淵", "伊藤仁斎", "太田道灌"],</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"answer": 1,</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"explanation": "貝原益軒は『和俗童子訓』において、年齢に応じた教育方法（随年教法）を説きました。"</p>
-<p class="p1"><span class="Apple-converted-space">            </span>},</p>
-<p class="p1"><span class="Apple-converted-space">            </span>{</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"question": "職業人を中心とした社会人に対して学校教育の修了後、いったん社会に出た後に行われる教育を何というか。",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"options": ["デジタルリテラシー教育", "リカレント教育", "リメディアル教育", "ダイバーシティ教育", "インクルーシブ教育"],</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"answer": 1,</p>
-<p class="p1"><span class="Apple-converted-space">                </span>"explanation": "リカレント教育とは、社会人が再び学校等で学び直すことを指します。"</p>
-<p class="p1"><span class="Apple-converted-space">            </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>]</p>
-<p class="p1"><span class="Apple-converted-space">        </span>// 将来的に「保育原理: [ { ... } ],」のように追加していきます</p>
-<p class="p1"><span class="Apple-converted-space">    </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>let userEmail = "";</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let currentSubject = "";</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let currentQuiz = [];</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let currentIndex = 0;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let score = 0;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>let resultLog = "";</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function goToSlide(slideId) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.querySelectorAll('.slide-container').forEach(s =&gt; s.classList.remove('slide-active'));</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById(slideId).classList.add('slide-active');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function saveUser() {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const email = document.getElementById('student-email').value;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (email.includes('@')) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>userEmail = email;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>goToSlide('slide-subjects');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>alert('正しいメールアドレスを入力してください。');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function selectSubject(subject) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>currentSubject = subject;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (subject === "MIX") {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 全科目の問題を結合してシャッフル</p>
-<p class="p1"><span class="Apple-converted-space">            </span>currentQuiz = Object.values(masterData).flat().sort(() =&gt; Math.random() - 0.5);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('quiz-title').innerText = "演習：全科目MIX";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>// 選択した科目の問題をシャッフル</p>
-<p class="p1"><span class="Apple-converted-space">            </span>currentQuiz = [...masterData[subject]].sort(() =&gt; Math.random() - 0.5);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('quiz-title').innerText = `演習：${subject}`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>currentIndex = 0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>score = 0;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>resultLog = "";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>startQuiz();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function startQuiz() {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (currentQuiz.length === 0) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>alert("この科目の問題はまだ登録されていません。");</p>
-<p class="p1"><span class="Apple-converted-space">            </span>return;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">        </span>goToSlide('slide-quiz');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>loadQuestion();</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function loadQuestion() {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const q = currentQuiz[currentIndex];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('question-text').innerText = `Q. ${q.question}`;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('progress-fill').style.width = `${(currentIndex / currentQuiz.length) * 100}%`;</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>const container = document.getElementById('options-container');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>container.innerHTML = '';</p>
-<p class="p2"><span class="Apple-converted-space">        </span></p>
-<p class="p1"><span class="Apple-converted-space">        </span>q.options.forEach((opt, idx) =&gt; {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>const btn = document.createElement('button');</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.className = 'option-btn';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.innerText = opt;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.onclick = () =&gt; handleAnswer(idx, opt);</p>
-<p class="p1"><span class="Apple-converted-space">            </span>container.appendChild(btn);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>});</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function handleAnswer(idx, optText) {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const q = currentQuiz[currentIndex];</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const isCorrect = (idx === q.answer);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (isCorrect) score++;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>resultLog += `【Q${currentIndex + 1}】${isCorrect ? '○' : '×'} 回答: ${optText}\n(正解: ${q.options[q.answer]})\n解説: ${q.explanation}\n\n`;</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>currentIndex++;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>if (currentIndex &lt; currentQuiz.length) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>loadQuestion();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>} else {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>finishQuiz();</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>function finishQuiz() {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('final-score').innerText = score;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>document.getElementById('accuracy').innerText = Math.round((score / currentQuiz.length) * 100);</p>
-<p class="p1"><span class="Apple-converted-space">        </span>goToSlide('slide-result');</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">    </span>async function sendToGAS() {</p>
-<p class="p1"><span class="Apple-converted-space">        </span>const btn = document.getElementById('submit-btn');</p>
-<p class="p1"><span class="Apple-converted-space">        </span>btn.disabled = true;</p>
-<p class="p1"><span class="Apple-converted-space">        </span>btn.innerText = "送信中...";</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>const payload = {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>email: userEmail,</p>
-<p class="p1"><span class="Apple-converted-space">            </span>score: score,</p>
-<p class="p1"><span class="Apple-converted-space">            </span>total: currentQuiz.length,</p>
-<p class="p1"><span class="Apple-converted-space">            </span>details: resultLog</p>
-<p class="p1"><span class="Apple-converted-space">        </span>};</p>
-<p class="p2"><br></p>
-<p class="p1"><span class="Apple-converted-space">        </span>try {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>await fetch(GAS_URL, {</p>
-<p class="p1"><span class="Apple-converted-space">                </span>method: "POST",</p>
-<p class="p1"><span class="Apple-converted-space">                </span>body: JSON.stringify(payload)</p>
-<p class="p1"><span class="Apple-converted-space">            </span>});</p>
-<p class="p1"><span class="Apple-converted-space">            </span>document.getElementById('status-msg').style.display = 'block';</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.style.display = 'none';</p>
-<p class="p1"><span class="Apple-converted-space">        </span>} catch (e) {</p>
-<p class="p1"><span class="Apple-converted-space">            </span>alert("送信に失敗しました。URLを確認してください。");</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.disabled = false;</p>
-<p class="p1"><span class="Apple-converted-space">            </span>btn.innerText = "結果を再送する";</p>
-<p class="p1"><span class="Apple-converted-space">        </span>}</p>
-<p class="p1"><span class="Apple-converted-space">    </span>}</p>
-<p class="p1">&lt;/script&gt;</p>
-<p class="p2"><br></p>
-<p class="p1">&lt;/body&gt;</p>
-<p class="p1">&lt;/html&gt;</p>
+
+<div class="slide-container slide-active" id="slide-intro" style="background-color: var(--primary-blue); color: var(--white); justify-content: center; align-items: center; text-align: center;">
+    <div style="max-width: 900px;">
+        <h1 style="font-size: 64px; margin-bottom: 20px; color: var(--bg-cream);">保育士国家資格<br>対策演習システム</h1>
+        <p style="font-size: 24px; color: var(--white); opacity: 0.9;">Professional Exam Preparation Suite v1.0</p>
+        <hr style="width: 80px; border: 2px solid var(--accent-emerald); margin: 30px auto;">
+        <button class="cta-button" onclick="goToSlide('slide-user')" style="background-color: var(--accent-emerald);">システムを開始する</button>
+    </div>
+</div>
+
+<div class="slide-container" id="slide-user">
+    <h2 class="slide-title">利用者情報の登録</h2>
+    <div class="content-area">
+        <div class="input-group">
+            <p style="margin-bottom: 30px;">演習結果のレポートを受け取るための<br>メールアドレスを入力してください。</p>
+            <input type="email" id="student-email" placeholder="email@example.com" required>
+            <button class="cta-button" onclick="saveUser()">登録して次へ</button>
+        </div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide-subjects">
+    <h2 class="slide-title">演習科目の選択</h2>
+    <div class="content-area">
+        <div class="tiled-content">
+            <div class="tile" onclick="selectSubject('教育原理')"><i class="fa-solid fa-book-open"></i><h3>教育原理</h3><p>思想・歴史・制度</p></div>
+            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-users-rectangle"></i><h3>保育原理</h3><p>(準備中)</p></div>
+            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-heart"></i><h3>社会的養護</h3><p>(準備中)</p></div>
+            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-baby"></i><h3>保育の心理学</h3><p>(準備中)</p></div>
+            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-stethoscope"></i><h3>子どもの保健</h3><p>(準備中)</p></div>
+            <div class="tile" onclick="selectSubject('MIX')" style="background-color: var(--accent-emerald); color: white;"><i class="fa-solid fa-shuffle" style="color: white;"></i><h3>全科目MIX</h3><p>総合演習モード</p></div>
+        </div>
+        <p style="margin-top: 30px; text-align: center; color: var(--text-muted); font-size: 14px;">※MIXモードは登録済みの全問題からランダムに出題されます。</p>
+    </div>
+</div>
+
+<div class="slide-container" id="slide-quiz">
+    <h2 class="slide-title" id="quiz-title">問題演習：教育原理</h2>
+    <div class="content-area">
+        <div id="progress-bar" style="height: 6px; background: #E2E8F0; width: 100%; margin-bottom: 20px; border-radius: 3px;">
+            <div id="progress-fill" style="height: 100%; background: var(--accent-emerald); width: 0%; border-radius: 3px; transition: width 0.3s;"></div>
+        </div>
+        <div class="question-box">
+            <p id="question-text" style="font-weight: 700; color: var(--primary-blue); font-size: 20px;">問題文をロード中...</p>
+        </div>
+        <div id="options-container" class="options-grid"></div>
+    </div>
+</div>
+
+<div class="slide-container" id="slide-result">
+    <h2 class="slide-title">演習結果の要約</h2>
+    <div class="content-area" style="text-align: center;">
+        <p style="font-size: 20px; margin-bottom: 20px;">お疲れ様でした！今回のスコアは：</p>
+        <div class="score-number" id="final-score">0</div>
+        <p style="font-size: 20px; color: var(--primary-blue); margin-top: 20px;">正答率: <span id="accuracy">0</span>%</p>
+        <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+            <button class="cta-button" id="submit-btn" onclick="sendToGAS()">結果を送信して終了</button>
+            <button class="cta-button" onclick="location.reload()" style="background: var(--bg-cream); color: var(--primary-blue);">TOPに戻る</button>
+        </div>
+        <p id="status-msg" style="margin-top: 20px; font-weight: bold; color: var(--accent-emerald); display: none;">送信完了しました。メールをご確認ください。</p>
+    </div>
+</div>
+
+<script>
+    /* --- アプリケーション・ロジック --- */
+    
+    // ★ここを書き換えてください★
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbxlPEB45mhyOoe13EqzuVMrsS-jzw9ey2KKCrKij_ERqgM0zN186bOL4WZpTKRxwSqr/exec";
+
+    // 科目別データ
+    const masterData = {
+        "教育原理": [
+            {
+                "question": "次の文にあてはまる人物として、正しいものを一つ選びなさい。江戸時代初期の儒学者。日本における陽明学の祖とされ、「近江聖人」と呼ばれた。『翁問答』を著す。",
+                "options": ["中江藤樹", "伊藤仁斎", "緒方洪庵", "林羅山", "貝原益軒"],
+                "answer": 0,
+                "explanation": "中江藤樹は、近江国（滋賀県）の儒学者で、日本の陽明学の祖です。"
+            },
+            {
+                "question": "1879（明治12）年に公布された、学制に代わる教育基本法制で、町村に学務委員を置くこととした法令は？",
+                "options": ["小学校令", "教育勅語", "教育令", "学制", "教育基本法"],
+                "answer": 2,
+                "explanation": "「教育令」は1879年に公布され、自由主義的な傾向を持っていました。"
+            },
+            {
+                "question": "モンテッソーリの『幼児の秘密』にて、恩物を用いた活動について言及されている、19世紀ドイツの教育者は？",
+                "options": ["ルソー", "フレーベル", "ペスタロッチ", "アリエス", "デューイ"],
+                "answer": 1,
+                "explanation": "フレーベルは恩物（Gaben）を考案した世界初の幼稚園創設者です。"
+            },
+            {
+                "question": "日本において最も早く体系的ともいえる教育論をまとめた儒学者で、「日本のロック」と称され、『和俗童子訓』を著したのは？",
+                "options": ["荻生徂徠", "貝原益軒", "佐藤信淵", "伊藤仁斎", "太田道灌"],
+                "answer": 1,
+                "explanation": "貝原益軒は『和俗童子訓』において、年齢に応じた教育方法（随年教法）を説きました。"
+            },
+            {
+                "question": "職業人を中心とした社会人に対して学校教育の修了後、いったん社会に出た後に行われる教育を何というか。",
+                "options": ["デジタルリテラシー教育", "リカレント教育", "リメディアル教育", "ダイバーシティ教育", "インクルーシブ教育"],
+                "answer": 1,
+                "explanation": "リカレント教育とは、社会人が再び学校等で学び直すことを指します。"
+            }
+        ]
+        // 将来的に「保育原理: [ { ... } ],」のように追加していきます
+    };
+
+    let userEmail = "";
+    let currentSubject = "";
+    let currentQuiz = [];
+    let currentIndex = 0;
+    let score = 0;
+    let resultLog = "";
+
+    function goToSlide(slideId) {
+        document.querySelectorAll('.slide-container').forEach(s => s.classList.remove('slide-active'));
+        document.getElementById(slideId).classList.add('slide-active');
+    }
+
+    function saveUser() {
+        const email = document.getElementById('student-email').value;
+        if (email.includes('@')) {
+            userEmail = email;
+            goToSlide('slide-subjects');
+        } else {
+            alert('正しいメールアドレスを入力してください。');
+        }
+    }
+
+    function selectSubject(subject) {
+        currentSubject = subject;
+        if (subject === "MIX") {
+            // 全科目の問題を結合してシャッフル
+            currentQuiz = Object.values(masterData).flat().sort(() => Math.random() - 0.5);
+            document.getElementById('quiz-title').innerText = "演習：全科目MIX";
+        } else {
+            // 選択した科目の問題をシャッフル
+            currentQuiz = [...masterData[subject]].sort(() => Math.random() - 0.5);
+            document.getElementById('quiz-title').innerText = `演習：${subject}`;
+        }
+        
+        currentIndex = 0;
+        score = 0;
+        resultLog = "";
+        startQuiz();
+    }
+
+    function startQuiz() {
+        if (currentQuiz.length === 0) {
+            alert("この科目の問題はまだ登録されていません。");
+            return;
+        }
+        goToSlide('slide-quiz');
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const q = currentQuiz[currentIndex];
+        document.getElementById('question-text').innerText = `Q. ${q.question}`;
+        document.getElementById('progress-fill').style.width = `${(currentIndex / currentQuiz.length) * 100}%`;
+        
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        
+        q.options.forEach((opt, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => handleAnswer(idx, opt);
+            container.appendChild(btn);
+        });
+    }
+
+    function handleAnswer(idx, optText) {
+        const q = currentQuiz[currentIndex];
+        const isCorrect = (idx === q.answer);
+        if (isCorrect) score++;
+
+        resultLog += `【Q${currentIndex + 1}】${isCorrect ? '○' : '×'} 回答: ${optText}\n(正解: ${q.options[q.answer]})\n解説: ${q.explanation}\n\n`;
+
+        currentIndex++;
+        if (currentIndex < currentQuiz.length) {
+            loadQuestion();
+        } else {
+            finishQuiz();
+        }
+    }
+
+    function finishQuiz() {
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('accuracy').innerText = Math.round((score / currentQuiz.length) * 100);
+        goToSlide('slide-result');
+    }
+
+    async function sendToGAS() {
+        const btn = document.getElementById('submit-btn');
+        btn.disabled = true;
+        btn.innerText = "送信中...";
+
+        const payload = {
+            email: userEmail,
+            score: score,
+            total: currentQuiz.length,
+            details: resultLog
+        };
+
+        try {
+            await fetch(GAS_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            document.getElementById('status-msg').style.display = 'block';
+            btn.style.display = 'none';
+        } catch (e) {
+            alert("送信に失敗しました。URLを確認してください。");
+            btn.disabled = false;
+            btn.innerText = "結果を再送する";
+        }
+    }
+</script>
+
 </body>
 </html>
