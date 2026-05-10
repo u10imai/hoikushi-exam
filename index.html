@@ -214,7 +214,7 @@
     /* --- アプリケーション・ロジック --- */
     
     // ★ここを書き換えてください★
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbxlPEB45mhyOoe13EqzuVMrsS-jzw9ey2KKCrKij_ERqgM0zN186bOL4WZpTKRxwSqr/exec";
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwgOKIscPjmFd1b3XnxDThnLWEy15PsnikTSX5hJTrERlgyI0YexyKE66MO768ERfeP/exec";
 
     // 科目別データ
     const masterData = {
@@ -347,6 +347,7 @@
 
         const payload = {
             email: userEmail,
+            subject: currentSubject, // これを追加
             score: score,
             total: currentQuiz.length,
             details: resultLog
