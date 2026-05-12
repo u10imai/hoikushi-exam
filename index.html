@@ -3,370 +3,1109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保育士試験対策システム - Professional Learning Suite</title>
+    <title>保育士試験対策システム</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        /* --- 1. コア・デザイン・システム --- */
+        /* ── Design Tokens ─────────────────────────────────── */
         :root {
-            --primary-blue: #005088;
-            --accent-emerald: #11CAA0;
-            --bg-cream: #F3F0DF;
-            --text-dark: #121212;
-            --text-muted: #4A5568;
-            --white: #FFFFFF;
+            --primary:    #005088;
+            --primary-d:  #003d6b;
+            --accent:     #11CAA0;
+            --accent-d:   #0da882;
+            --bg-cream:   #F3F0DF;
+            --bg-page:    #E2E8F0;
+            --text:       #121212;
+            --muted:      #4A5568;
+            --white:      #FFFFFF;
+            --success:    #2F855A;
+            --success-bg: #F0FFF4;
+            --error:      #C53030;
+            --error-bg:   #FFF5F5;
+            --border:     #CBD5E0;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background-color: #E2E8F0;
+            background: var(--bg-page);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 40px;
-            padding: 40px 0;
+            gap: 32px;
+            padding: 36px 16px;
             font-family: 'DM Sans', sans-serif;
-            color: var(--text-dark);
+            color: var(--text);
         }
 
-        .slide-container {
+        /* ── Slides ──────────────────────────────────────────── */
+        .slide {
             width: 1280px;
-            max-width: 95%; /* スマホ対応 */
-            height: 720px;
-            max-height: 90vh; /* スマホ対応 */
-            background-color: var(--white);
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-            overflow: auto; /* コンテンツが多い場合はスクロール */
-            display: none; /* 初期は非表示 */
-            flex-direction: column;
-            padding: 40px;
-            position: relative;
-        }
-
-        .slide-active { display: flex !important; }
-
-        /* --- 2. タイポグラフィ --- */
-        h1, h2, h3 { font-family: 'Merriweather', serif; font-weight: 700; }
-        
-        .slide-title {
-            font-size: 36px;
-            color: var(--primary-blue);
-            margin-bottom: 30px;
-            border-left: 8px solid var(--accent-emerald);
-            padding-left: 20px;
-        }
-
-        p, li { font-size: 18px; line-height: 1.6; color: var(--text-muted); }
-
-        /* --- 3. レイアウト・コンポーネント --- */
-        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
-
-        /* グリッド・タイル */
-        .tiled-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            width: 100%;
-        }
-
-        .tile {
-            background-color: var(--bg-cream);
-            padding: 25px;
-            border-radius: 16px;
-            text-align: center;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-            border: 2px solid transparent;
-        }
-
-        .tile:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            border-color: var(--primary-blue);
-        }
-
-        .tile i { font-size: 36px; color: var(--primary-blue); margin-bottom: 15px; }
-
-        /* 入力フォーム */
-        .input-group { max-width: 500px; margin: 0 auto; width: 100%; text-align: center; }
-        input[type="email"] {
-            width: 100%;
-            padding: 15px;
-            font-size: 20px;
-            border-radius: 8px;
-            border: 2px solid #CBD5E0;
-            margin-bottom: 25px;
-            font-family: inherit;
-        }
-
-        /* クイズ画面 */
-        .question-box { background: var(--bg-cream); padding: 30px; border-radius: 20px; margin-bottom: 25px; }
-        .options-grid { display: grid; gap: 15px; }
-        .option-btn {
+            max-width: 100%;
             background: var(--white);
-            border: 2px solid var(--primary-blue);
-            padding: 18px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 16px;
-            cursor: pointer;
-            transition: all 0.2s;
-            line-height: 1.4;
+            border-radius: 20px;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.11);
+            display: none;
+            flex-direction: column;
+            padding: 44px 52px;
         }
-        .option-btn:hover { background: var(--primary-blue); color: var(--white); }
+        .slide.active { display: flex; }
 
-        /* ボタン */
-        .cta-button {
-            background-color: var(--primary-blue);
-            color: var(--white);
-            padding: 15px 40px;
-            font-size: 20px;
+        /* ── Typography ──────────────────────────────────────── */
+        h1, h2, h3 { font-family: 'Merriweather', serif; font-weight: 700; }
+
+        .slide-title {
+            font-size: 28px;
+            color: var(--primary);
+            border-left: 8px solid var(--accent);
+            padding-left: 18px;
+            margin-bottom: 28px;
+            line-height: 1.3;
+        }
+
+        .section-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: var(--muted);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ── Buttons ─────────────────────────────────────────── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 13px 32px;
+            font-size: 16px;
             font-weight: 700;
             border: none;
             border-radius: 50px;
             cursor: pointer;
-            align-self: center;
+            transition: all .18s ease;
+            font-family: inherit;
+        }
+        .btn:disabled { opacity: .4; cursor: not-allowed !important; transform: none !important; box-shadow: none !important; }
+        .btn-primary { background: var(--primary); color: var(--white); }
+        .btn-primary:hover:not(:disabled) { background: var(--primary-d); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,80,136,.28); }
+        .btn-accent  { background: var(--accent);  color: var(--white); }
+        .btn-accent:hover:not(:disabled)  { background: var(--accent-d);  transform: translateY(-2px); box-shadow: 0 6px 18px rgba(17,202,160,.3); }
+        .btn-ghost { background: transparent; color: var(--muted); border: 2px solid var(--border); }
+        .btn-ghost:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { padding: 9px 20px; font-size: 14px; }
+
+        /* ── Input ───────────────────────────────────────────── */
+        .input-field {
+            width: 100%;
+            padding: 13px 16px;
+            font-size: 16px;
+            border-radius: 10px;
+            border: 2px solid var(--border);
+            font-family: inherit;
+            color: var(--text);
+            transition: border-color .2s, box-shadow .2s;
+        }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0,80,136,.12); }
+
+        /* ── Chips ───────────────────────────────────────────── */
+        .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+        .chip {
+            padding: 7px 18px;
+            border-radius: 50px;
+            border: 2px solid var(--border);
+            background: var(--white);
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--muted);
+            transition: all .15s;
+        }
+        .chip:hover { border-color: var(--primary); color: var(--primary); }
+        .chip.active { background: var(--primary); border-color: var(--primary); color: var(--white); }
+
+        /* ── Subject tiles (multi-select) ────────────────────── */
+        .subject-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+        }
+        .subject-tile {
+            background: var(--bg-cream);
+            padding: 18px 12px;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all .18s;
+            border: 2px solid transparent;
+            position: relative;
+            user-select: none;
+        }
+        .subject-tile:hover:not(.disabled) { border-color: var(--primary); transform: translateY(-2px); }
+        .subject-tile.disabled { opacity: .38; cursor: not-allowed; }
+        .subject-tile i { font-size: 24px; color: var(--primary); margin-bottom: 8px; display: block; transition: color .15s; }
+        .subject-tile h3 { font-size: 13px; color: var(--text); line-height: 1.3; }
+        .subject-tile p  { font-size: 11px; color: var(--muted); margin-top: 3px; }
+        /* Selected state */
+        .subject-tile.selected {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .subject-tile.selected i,
+        .subject-tile.selected h3,
+        .subject-tile.selected p { color: var(--white); }
+        .subject-tile .check {
+            position: absolute;
+            top: 7px; right: 9px;
+            font-size: 12px;
+            color: var(--accent);
+            display: none;
+        }
+        .subject-tile.selected .check { display: block; }
+        /* MIX tile */
+        .subject-tile.mix-tile {
+            background: var(--accent);
+            border-color: var(--accent-d);
+        }
+        .subject-tile.mix-tile:hover { background: var(--accent-d); transform: translateY(-2px); }
+        .subject-tile.mix-tile i,
+        .subject-tile.mix-tile h3,
+        .subject-tile.mix-tile p { color: var(--white); }
+        .subject-tile.mix-tile.selected { background: var(--accent-d); border-color: #087a5f; }
+        .subject-tile.mix-tile .check { color: var(--white); }
+
+        /* ── Feedback mode cards ─────────────────────────────── */
+        .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .mode-card {
+            padding: 20px 18px;
+            border-radius: 14px;
+            border: 2px solid var(--border);
+            cursor: pointer;
+            transition: all .18s;
+            text-align: center;
+            background: var(--white);
+        }
+        .mode-card:hover { border-color: var(--primary); }
+        .mode-card.selected { border-color: var(--primary); background: #EBF4FF; }
+        .mode-card i { font-size: 28px; color: var(--primary); margin-bottom: 10px; display: block; }
+        .mode-card h3 { font-size: 15px; margin-bottom: 5px; color: var(--text); }
+        .mode-card p  { font-size: 12px; color: var(--muted); line-height: 1.5; }
+        .mode-card .mode-check { display: none; color: var(--accent); font-size: 13px; margin-top: 8px; font-weight: 700; }
+        .mode-card.selected .mode-check { display: block; }
+
+        /* ── Progress bar ────────────────────────────────────── */
+        .progress-bar { height: 8px; background: #E2E8F0; border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 4px; transition: width .35s ease; }
+
+        /* ── Question & options ──────────────────────────────── */
+        .question-box {
+            background: var(--bg-cream);
+            padding: 24px 26px;
+            border-radius: 14px;
+            margin-bottom: 18px;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+            line-height: 1.7;
+        }
+        .options-list { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            background: var(--white);
+            border: 2px solid var(--border);
+            padding: 13px 17px;
+            border-radius: 12px;
+            text-align: left;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all .15s;
+            font-family: inherit;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            color: var(--text);
+        }
+        .option-btn .num { font-weight: 700; color: var(--muted); flex-shrink: 0; min-width: 22px; }
+        .option-btn:hover:not(.locked) { border-color: var(--primary); background: #EBF4FF; }
+        .option-btn.selected { border-color: var(--primary); background: #EBF4FF; }
+        .option-btn.selected .num { color: var(--primary); }
+        .option-btn.correct { border-color: var(--success); background: var(--success-bg); }
+        .option-btn.correct .num { color: var(--success); }
+        .option-btn.wrong { border-color: var(--error); background: var(--error-bg); }
+        .option-btn.wrong .num { color: var(--error); }
+        .option-btn.locked { cursor: default; }
+
+        /* ── Explanation ─────────────────────────────────────── */
+        .explanation-box {
+            background: #EBF8FF;
+            border-left: 5px solid var(--primary);
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin-top: 16px;
+            font-size: 15px;
+            line-height: 1.8;
+            animation: fadeUp .25s ease;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
-        .cta-button:disabled { background-color: #A0AEC0; cursor: not-allowed; }
+        /* ── Action bar (quiz) ───────────────────────────────── */
+        .action-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 18px;
+            border-top: 1px solid var(--border);
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
 
-        /* 結果表示 */
-        .score-number { font-size: 100px; color: var(--accent-emerald); font-weight: 700; text-align: center; }
+        /* ── Result ──────────────────────────────────────────── */
+        .score-big {
+            font-size: 60px;
+            font-weight: 900;
+            color: var(--accent);
+            font-family: 'Merriweather', serif;
+            line-height: 1;
+            margin: 10px 0;
+        }
 
-        /* スマホ用調整 */
+        /* ── Divider ─────────────────────────────────────────── */
+        .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+        /* ── Responsive ──────────────────────────────────────── */
         @media (max-width: 768px) {
-            h1 { font-size: 40px !important; }
-            .slide-title { font-size: 28px; }
-            .score-number { font-size: 80px; }
-            .slide-container { padding: 20px; }
+            .slide { padding: 22px 18px; }
+            .slide-title { font-size: 21px; }
+            .subject-grid { grid-template-columns: repeat(3, 1fr); }
+            .mode-cards { grid-template-columns: 1fr; }
+            .score-big { font-size: 46px; }
+        }
+        @media (max-width: 480px) {
+            .subject-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
 <body>
 
-<div class="slide-container slide-active" id="slide-intro" style="background-color: var(--primary-blue); color: var(--white); justify-content: center; align-items: center; text-align: center;">
-    <div style="max-width: 900px;">
-        <h1 style="font-size: 64px; margin-bottom: 20px; color: var(--bg-cream);">保育士国家資格<br>対策演習システム</h1>
-        <p style="font-size: 24px; color: var(--white); opacity: 0.9;">Professional Exam Preparation Suite v1.0</p>
-        <hr style="width: 80px; border: 2px solid var(--accent-emerald); margin: 30px auto;">
-        <button class="cta-button" onclick="goToSlide('slide-user')" style="background-color: var(--accent-emerald);">システムを開始する</button>
+<!-- ═══════════════════════════════════════════
+     Slide 1 : Intro
+════════════════════════════════════════════════ -->
+<div class="slide active" id="slide-intro"
+     style="background: var(--primary); justify-content: center; align-items: center; text-align: center; min-height: 480px;">
+    <div style="max-width: 800px;">
+        <h1 style="font-size: 48px; color: var(--bg-cream); line-height: 1.3; margin-bottom: 14px;">
+            保育士国家資格<br>対策演習システム
+        </h1>
+        <p style="font-size: 17px; color: rgba(255,255,255,.78); margin-bottom: 36px;">
+            Professional Exam Preparation Suite v2.1
+        </p>
+        <hr style="border: none; border-top: 3px solid var(--accent); width: 56px; margin: 0 auto 36px;">
+        <button class="btn btn-accent" onclick="initSetup()" style="font-size: 19px; padding: 17px 50px;">
+            演習を始める &rarr;
+        </button>
     </div>
 </div>
 
-<div class="slide-container" id="slide-user">
-    <h2 class="slide-title">利用者情報の登録</h2>
-    <div class="content-area">
-        <div class="input-group">
-            <p style="margin-bottom: 30px;">演習結果のレポートを受け取るための<br>メールアドレスを入力してください。</p>
-            <input type="email" id="student-email" placeholder="email@example.com" required>
-            <button class="cta-button" onclick="saveUser()">登録して次へ</button>
+<!-- ═══════════════════════════════════════════
+     Slide 2 : Setup (all-in-one)
+════════════════════════════════════════════════ -->
+<div class="slide" id="slide-setup">
+    <h2 class="slide-title">演習の設定</h2>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 36px 52px;">
+
+        <!-- LEFT COLUMN -->
+        <div style="display: flex; flex-direction: column; gap: 26px;">
+
+            <!-- Email (mandatory) -->
+            <div>
+                <p class="section-label"><i class="fa-solid fa-envelope"></i> メールアドレス（必須）</p>
+                <input type="email" id="setup-email" class="input-field"
+                       placeholder="email@example.com"
+                       oninput="validateSetup()"
+                       onkeydown="if(event.key==='Enter') document.getElementById('setup-email').blur()">
+                <p style="font-size: 12px; color: var(--muted); margin-top: 6px; line-height: 1.5;">
+                    <i class="fa-solid fa-circle-info"></i>
+                    結果・解説の送信に使用します。ブラウザが記憶するので次回から素早く入力できます。
+                </p>
+            </div>
+
+            <!-- Year -->
+            <div id="year-section" style="display: none;">
+                <p class="section-label"><i class="fa-solid fa-calendar-days"></i> 年度</p>
+                <div class="chip-group" id="year-chips"></div>
+            </div>
+
+            <!-- Question count -->
+            <div>
+                <p class="section-label"><i class="fa-solid fa-list-ol"></i> 問題数</p>
+                <div class="chip-group" id="count-chips">
+                    <button class="chip active" data-count="10" onclick="selectCount(this)">10問</button>
+                    <button class="chip" data-count="20"       onclick="selectCount(this)">20問</button>
+                    <button class="chip" data-count="30"       onclick="selectCount(this)">30問</button>
+                    <button class="chip" data-count="all"      onclick="selectCount(this)">全問</button>
+                </div>
+            </div>
+
+            <!-- Feedback mode -->
+            <div>
+                <p class="section-label"><i class="fa-solid fa-eye"></i> 正誤・解説の確認方法</p>
+                <div class="mode-cards">
+                    <div class="mode-card selected" id="mode-immediate" onclick="selectMode('immediate')">
+                        <i class="fa-solid fa-bolt"></i>
+                        <h3>1問ずつ確認</h3>
+                        <p>回答後すぐに正解と<br>解説を表示する</p>
+                        <div class="mode-check"><i class="fa-solid fa-check-circle"></i> 選択中</div>
+                    </div>
+                    <div class="mode-card" id="mode-email" onclick="selectMode('email')">
+                        <i class="fa-solid fa-envelope-open-text"></i>
+                        <h3>メールで確認</h3>
+                        <p>演習後に解説をまとめて<br>メール送信する</p>
+                        <div class="mode-check"><i class="fa-solid fa-check-circle"></i> 選択中</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN : Subject selection -->
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <p class="section-label" style="margin: 0;"><i class="fa-solid fa-book"></i> 科目（複数選択可）</p>
+                <button class="btn btn-ghost btn-sm" onclick="toggleAllSubjects()" id="btn-all-subjects">
+                    全科目を選択
+                </button>
+            </div>
+            <div class="subject-grid" id="subject-tiles"></div>
+            <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+                ※ データのある科目のみ選択できます
+            </p>
+        </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Start button -->
+    <div style="display: flex; justify-content: center;">
+        <button class="btn btn-accent" id="btn-start" onclick="startQuiz()"
+                disabled style="font-size: 18px; padding: 16px 52px;">
+            <i class="fa-solid fa-play"></i> 演習を開始する
+        </button>
+    </div>
+    <p id="setup-error" style="text-align:center; font-size:13px; color:var(--error); margin-top:10px; display:none;"></p>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     Slide 3 : Quiz
+════════════════════════════════════════════════ -->
+<div class="slide" id="slide-quiz">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+        <p style="font-size: 13px; color: var(--muted);" id="q-meta">問題 1 / 10</p>
+        <p style="font-size: 13px; font-weight: 700; color: var(--primary);" id="quiz-label"></p>
+    </div>
+    <div class="progress-bar" style="margin-bottom: 18px;">
+        <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+    </div>
+
+    <!-- Body -->
+    <div style="flex: 1; overflow-y: auto;" id="quiz-body">
+        <div class="question-box" id="question-text">問題文を読み込み中...</div>
+        <div class="options-list" id="options-container"></div>
+        <div id="explanation-area" style="display: none;">
+            <div class="explanation-box" id="explanation-text"></div>
+        </div>
+    </div>
+
+    <!-- Action bar -->
+    <div class="action-bar">
+        <button class="btn btn-ghost btn-sm" id="btn-prev" onclick="prevQuestion()" style="display:none;">
+            <i class="fa-solid fa-arrow-left"></i> 前の問題
+        </button>
+        <div style="flex:1;"></div>
+        <!-- Immediate mode: confirm then next -->
+        <button class="btn btn-primary btn-sm" id="btn-confirm" onclick="confirmAnswer()" disabled>
+            <i class="fa-solid fa-check"></i> 回答を確定する
+        </button>
+        <!-- Email mode: select then next-record -->
+        <button class="btn btn-primary btn-sm" id="btn-record" onclick="recordAndNext()" style="display:none;" disabled>
+            次の問題へ <i class="fa-solid fa-arrow-right"></i>
+        </button>
+        <!-- After confirm (immediate) or always last step -->
+        <button class="btn btn-accent btn-sm" id="btn-next" onclick="nextQuestion()" style="display:none;">
+            次の問題へ <i class="fa-solid fa-arrow-right"></i>
+        </button>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     Slide 4 : Result
+════════════════════════════════════════════════ -->
+<div class="slide" id="slide-result">
+    <h2 class="slide-title">演習結果</h2>
+    <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap: 6px;">
+        <p style="font-size: 17px; color: var(--muted);">お疲れ様でした！</p>
+        <div class="score-big" id="final-score">-</div>
+        <p style="font-size: 22px; color: var(--primary); font-weight: 700;">
+            正答率 <span id="accuracy">-</span>%
+        </p>
+        <p style="font-size: 13px; color: var(--muted); margin-bottom: 24px;" id="result-meta"></p>
+
+        <!-- Email send status -->
+        <div style="background: var(--bg-cream); border-radius: 16px; padding: 20px 28px; max-width: 440px; width:100%; margin-bottom: 24px;">
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 6px;">送信先</p>
+            <p style="font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 14px;" id="email-card-addr"></p>
+            <div id="email-sending-msg" style="display:none;">
+                <p style="color: var(--muted); font-size: 15px;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> 送信中...
+                </p>
+            </div>
+            <div id="email-sent-msg" style="display:none;">
+                <p style="color: var(--success); font-weight: 700; font-size: 15px;">
+                    <i class="fa-solid fa-circle-check"></i> 送信しました！メールをご確認ください。
+                </p>
+            </div>
+            <div id="email-error-msg" style="display:none;">
+                <p style="color: var(--error); font-size: 14px; margin-bottom: 10px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> 送信に失敗しました。
+                </p>
+                <button class="btn btn-ghost btn-sm" onclick="sendToGAS()">
+                    <i class="fa-solid fa-rotate-right"></i> 再送する
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+            <button class="btn btn-ghost" onclick="location.reload()"><i class="fa-solid fa-house"></i> TOP</button>
+            <button class="btn btn-ghost" onclick="retryQuiz()"><i class="fa-solid fa-rotate-right"></i> もう一度</button>
+            <button class="btn btn-ghost" onclick="goToSlide('slide-setup'); initSetupAfterQuiz()"><i class="fa-solid fa-sliders"></i> 設定を変える</button>
         </div>
     </div>
 </div>
 
-<div class="slide-container" id="slide-subjects">
-    <h2 class="slide-title">演習科目の選択</h2>
-    <div class="content-area">
-        <div class="tiled-content">
-            <div class="tile" onclick="selectSubject('教育原理')"><i class="fa-solid fa-book-open"></i><h3>教育原理</h3><p>思想・歴史・制度</p></div>
-            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-users-rectangle"></i><h3>保育原理</h3><p>(準備中)</p></div>
-            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-heart"></i><h3>社会的養護</h3><p>(準備中)</p></div>
-            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-baby"></i><h3>保育の心理学</h3><p>(準備中)</p></div>
-            <div class="tile" style="opacity: 0.5;"><i class="fa-solid fa-stethoscope"></i><h3>子どもの保健</h3><p>(準備中)</p></div>
-            <div class="tile" onclick="selectSubject('MIX')" style="background-color: var(--accent-emerald); color: white;"><i class="fa-solid fa-shuffle" style="color: white;"></i><h3>全科目MIX</h3><p>総合演習モード</p></div>
-        </div>
-        <p style="margin-top: 30px; text-align: center; color: var(--text-muted); font-size: 14px;">※MIXモードは登録済みの全問題からランダムに出題されます。</p>
-    </div>
-</div>
-
-<div class="slide-container" id="slide-quiz">
-    <h2 class="slide-title" id="quiz-title">問題演習：教育原理</h2>
-    <div class="content-area">
-        <div id="progress-bar" style="height: 6px; background: #E2E8F0; width: 100%; margin-bottom: 20px; border-radius: 3px;">
-            <div id="progress-fill" style="height: 100%; background: var(--accent-emerald); width: 0%; border-radius: 3px; transition: width 0.3s;"></div>
-        </div>
-        <div class="question-box">
-            <p id="question-text" style="font-weight: 700; color: var(--primary-blue); font-size: 20px;">問題文をロード中...</p>
-        </div>
-        <div id="options-container" class="options-grid"></div>
-    </div>
-</div>
-
-<div class="slide-container" id="slide-result">
-    <h2 class="slide-title">演習結果の要約</h2>
-    <div class="content-area" style="text-align: center;">
-        <p style="font-size: 20px; margin-bottom: 20px;">お疲れ様でした！今回のスコアは：</p>
-        <div class="score-number" id="final-score">0</div>
-        <p style="font-size: 20px; color: var(--primary-blue); margin-top: 20px;">正答率: <span id="accuracy">0</span>%</p>
-        <div style="margin-top: 40px; display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
-            <button class="cta-button" id="submit-btn" onclick="sendToGAS()">結果を送信して終了</button>
-            <button class="cta-button" onclick="location.reload()" style="background: var(--bg-cream); color: var(--primary-blue);">TOPに戻る</button>
-        </div>
-        <p id="status-msg" style="margin-top: 20px; font-weight: bold; color: var(--accent-emerald); display: none;">送信完了しました。メールをご確認ください。</p>
-    </div>
-</div>
-
+<!-- ═══════════════════════════════════════════
+     Script
+════════════════════════════════════════════════ -->
 <script>
-    /* --- アプリケーション・ロジック --- */
-    
-    // ★ここを書き換えてください★
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbyE-Y0RIRrWDbPWP0OxWqnPm5rxUXpj9T1wx5mF2_Z-PnQZmEJn6V6tLERQHw92VjCc/exec";
+'use strict';
 
-    // 科目別データ
-    const masterData = {
-        "教育原理": [
-            {
-                "question": "次の文にあてはまる人物として、正しいものを一つ選びなさい。江戸時代初期の儒学者。日本における陽明学の祖とされ、「近江聖人」と呼ばれた。『翁問答』を著す。",
-                "options": ["中江藤樹", "伊藤仁斎", "緒方洪庵", "林羅山", "貝原益軒"],
-                "answer": 0,
-                "explanation": "中江藤樹は、近江国（滋賀県）の儒学者で、日本の陽明学の祖です。"
-            },
-            {
-                "question": "1879（明治12）年に公布された、学制に代わる教育基本法制で、町村に学務委員を置くこととした法令は？",
-                "options": ["小学校令", "教育勅語", "教育令", "学制", "教育基本法"],
-                "answer": 2,
-                "explanation": "「教育令」は1879年に公布され、自由主義的な傾向を持っていました。"
-            },
-            {
-                "question": "モンテッソーリの『幼児の秘密』にて、恩物を用いた活動について言及されている、19世紀ドイツの教育者は？",
-                "options": ["ルソー", "フレーベル", "ペスタロッチ", "アリエス", "デューイ"],
-                "answer": 1,
-                "explanation": "フレーベルは恩物（Gaben）を考案した世界初の幼稚園創設者です。"
-            },
-            {
-                "question": "日本において最も早く体系的ともいえる教育論をまとめた儒学者で、「日本のロック」と称され、『和俗童子訓』を著したのは？",
-                "options": ["荻生徂徠", "貝原益軒", "佐藤信淵", "伊藤仁斎", "太田道灌"],
-                "answer": 1,
-                "explanation": "貝原益軒は『和俗童子訓』において、年齢に応じた教育方法（随年教法）を説きました。"
-            },
-            {
-                "question": "職業人を中心とした社会人に対して学校教育の修了後、いったん社会に出た後に行われる教育を何というか。",
-                "options": ["デジタルリテラシー教育", "リカレント教育", "リメディアル教育", "ダイバーシティ教育", "インクルーシブ教育"],
-                "answer": 1,
-                "explanation": "リカレント教育とは、社会人が再び学校等で学び直すことを指します。"
-            }
+// ── Config ──────────────────────────────────────────────────────────
+const GAS_URL = "https://script.google.com/macros/s/AKfycbyE-Y0RIRrWDbPWP0OxWqnPm5rxUXpj9T1wx5mF2_Z-PnQZmEJn6V6tLERQHw92VjCc/exec";
+
+// ── App State ────────────────────────────────────────────────────────
+const app = {
+    // Setup
+    email:           "",
+    selectedYear:    "",       // "" = all years
+    selectedSubjects: new Set(), // subject keys
+    questionCount:   10,       // number or Infinity
+    feedbackMode:    "immediate", // "immediate" | "email"
+    // Quiz
+    quiz:        [],
+    progressIdx: 0,   // furthest unanswered
+    viewIdx:     0,   // currently displayed
+    selectedOpt: null,
+    score:       0,
+    log:         [],
+    // Data
+    datasets:    [],
+};
+
+// ── Subject catalogue ─────────────────────────────────────────────────
+const SUBJECTS = [
+    { key:"教育原理",       icon:"fa-book-open",           desc:"思想・歴史・制度" },
+    { key:"保育原理",       icon:"fa-users-rectangle",     desc:"保育の基本" },
+    { key:"社会的養護",     icon:"fa-heart",               desc:"児童福祉・施設" },
+    { key:"保育の心理学",   icon:"fa-brain",               desc:"発達・学習心理" },
+    { key:"子どもの保健",   icon:"fa-stethoscope",         desc:"健康・疾病・保健" },
+    { key:"子どもの食と栄養", icon:"fa-apple-whole",       desc:"食育・栄養学" },
+    { key:"保育実習理論",   icon:"fa-chalkboard-user",     desc:"実習・表現技術" },
+    { key:"社会福祉",       icon:"fa-hands-holding-child", desc:"福祉制度・法律" },
+    { key:"子ども家庭福祉", icon:"fa-house-chimney-heart", desc:"家庭支援・政策" },
+];
+
+// ── Embedded fallback data ─────────────────────────────────────────────
+const FALLBACK = {
+    "教育原理": {
+        meta: { year:"サンプル", subject:"教育原理" },
+        questions: [
+            { id:1, question:"次の文にあてはまる人物として、正しいものを一つ選びなさい。江戸時代初期の儒学者。日本における陽明学の祖とされ、「近江聖人」と呼ばれた。『翁問答』を著す。",
+              options:["中江藤樹","伊藤仁斎","緒方洪庵","林羅山","貝原益軒"], answer:0,
+              explanation:"中江藤樹（1608〜1648）は近江国出身の儒学者で、日本の陽明学の祖。「近江聖人」と呼ばれ、代表作に『翁問答』があります。" },
+            { id:2, question:"1879（明治12）年に公布された、学制に代わる教育基本法制で、町村に学務委員を置くこととした法令は？",
+              options:["小学校令","教育勅語","教育令","学制","教育基本法"], answer:2,
+              explanation:"「教育令」（1879年）は学制廃止後の自由主義的な教育法令で、翌年の改正教育令でより中央集権化されました。" },
+            { id:3, question:"モンテッソーリの『幼児の秘密』にて、恩物を用いた活動について言及されている、19世紀ドイツの教育者は？",
+              options:["ルソー","フレーベル","ペスタロッチ","アリエス","デューイ"], answer:1,
+              explanation:"フレーベル（1782〜1852）は世界初の幼稚園を創設し、「恩物（Gaben）」を考案。モンテッソーリもその影響を受けました。" },
+            { id:4, question:"日本において最も早く体系的ともいえる教育論をまとめた儒学者で、「日本のロック」と称され、『和俗童子訓』を著したのは？",
+              options:["荻生徂徠","貝原益軒","佐藤信淵","伊藤仁斎","太田道灌"], answer:1,
+              explanation:"貝原益軒（1630〜1714）は江戸時代の儒学者で『和俗童子訓』において随年教法（年齢に応じた教育）を説きました。" },
+            { id:5, question:"職業人を中心とした社会人に対して、学校教育修了後にいったん社会に出た後で行われる教育を何というか。",
+              options:["デジタルリテラシー教育","リカレント教育","リメディアル教育","ダイバーシティ教育","インクルーシブ教育"], answer:1,
+              explanation:"リカレント教育とは、社会に出た人が必要に応じて再び教育機関に戻り学び直すことです。OECDが1970年代から提唱しています。" }
         ]
-        // 将来的に「保育原理: [ { ... } ],」のように追加していきます
-    };
+    }
+};
 
-    let userEmail = "";
-    let currentSubject = "";
-    let currentQuiz = [];
-    let currentIndex = 0;
-    let score = 0;
-    let resultLog = "";
+// ═══════════════════════════════════════════════
+//  Slide navigation
+// ═══════════════════════════════════════════════
+function goToSlide(id) {
+    document.querySelectorAll('.slide').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-    function goToSlide(slideId) {
-        document.querySelectorAll('.slide-container').forEach(s => s.classList.remove('slide-active'));
-        document.getElementById(slideId).classList.add('slide-active');
+// ═══════════════════════════════════════════════
+//  SETUP SCREEN
+// ═══════════════════════════════════════════════
+async function initSetup() {
+    goToSlide('slide-setup');
+    // Restore email if remembered
+    const saved = sessionStorage.getItem('hoiku_email');
+    if (saved) document.getElementById('setup-email').value = saved;
+
+    try {
+        const res = await fetch('data/index.json');
+        if (!res.ok) throw new Error();
+        const idx = await res.json();
+        app.datasets = idx.datasets || [];
+    } catch (_) {
+        app.datasets = [];
     }
 
-    function saveUser() {
-        const email = document.getElementById('student-email').value;
-        if (email.includes('@')) {
-            userEmail = email;
-            goToSlide('slide-subjects');
-        } else {
-            alert('正しいメールアドレスを入力してください。');
+    renderYearChips();
+    renderSubjectTiles();
+    validateSetup();
+}
+
+function initSetupAfterQuiz() {
+    // Keep email and other settings when returning to setup
+    document.getElementById('setup-email').value = app.email;
+    renderYearChips();
+    renderSubjectTiles();
+    validateSetup();
+}
+
+// ── Year chips ──────────────────────────────────────────────────────
+function renderYearChips() {
+    const years = [...new Set(app.datasets.map(d => d.year))].sort();
+    const section = document.getElementById('year-section');
+    if (!years.length) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    const el = document.getElementById('year-chips');
+    el.innerHTML = '';
+    const allBtn = makeChip('すべて', true);
+    allBtn.addEventListener('click', () => { app.selectedYear = ''; syncChips(allBtn); renderSubjectTiles(); });
+    el.appendChild(allBtn);
+    years.forEach(y => {
+        const btn = makeChip(y, false);
+        btn.addEventListener('click', () => { app.selectedYear = y; syncChips(btn); renderSubjectTiles(); });
+        el.appendChild(btn);
+    });
+}
+function syncChips(activeBtn) {
+    activeBtn.closest('.chip-group').querySelectorAll('.chip')
+        .forEach(c => c.classList.toggle('active', c === activeBtn));
+}
+function makeChip(label, active) {
+    const btn = document.createElement('button');
+    btn.className = 'chip' + (active ? ' active' : '');
+    btn.textContent = label;
+    return btn;
+}
+
+// ── Question count chips ─────────────────────────────────────────────
+function selectCount(btn) {
+    document.querySelectorAll('#count-chips .chip')
+        .forEach(c => c.classList.toggle('active', c === btn));
+    const v = btn.dataset.count;
+    app.questionCount = v === 'all' ? Infinity : parseInt(v);
+}
+
+// ── Feedback mode ────────────────────────────────────────────────────
+function selectMode(mode) {
+    app.feedbackMode = mode;
+    document.getElementById('mode-immediate').classList.toggle('selected', mode === 'immediate');
+    document.getElementById('mode-email').classList.toggle('selected', mode === 'email');
+}
+
+// ── Subject tiles (multi-select) ─────────────────────────────────────
+function renderSubjectTiles() {
+    const available = new Set(
+        app.datasets
+            .filter(d => !app.selectedYear || d.year === app.selectedYear)
+            .map(d => d.subject)
+    );
+    // Also include fallback subjects
+    Object.keys(FALLBACK).forEach(k => available.add(k));
+
+    const el = document.getElementById('subject-tiles');
+    el.innerHTML = '';
+
+    SUBJECTS.forEach(s => {
+        const has = available.has(s.key);
+        const tile = document.createElement('div');
+        tile.className = 'subject-tile' + (has ? '' : ' disabled');
+        tile.dataset.key = s.key;
+        tile.innerHTML = `
+            <i class="fa-solid ${s.icon}"></i>
+            <h3>${s.key}</h3>
+            <p>${has ? s.desc : '準備中'}</p>
+            <i class="fa-solid fa-check-circle check"></i>`;
+        if (has) {
+            tile.addEventListener('click', () => toggleSubject(s.key, tile));
+            if (app.selectedSubjects.has(s.key)) tile.classList.add('selected');
         }
-    }
+        el.appendChild(tile);
+    });
 
-    function selectSubject(subject) {
-        currentSubject = subject;
-        if (subject === "MIX") {
-            // 全科目の問題を結合してシャッフル
-            currentQuiz = Object.values(masterData).flat().sort(() => Math.random() - 0.5);
-            document.getElementById('quiz-title').innerText = "演習：全科目MIX";
-        } else {
-            // 選択した科目の問題をシャッフル
-            currentQuiz = [...masterData[subject]].sort(() => Math.random() - 0.5);
-            document.getElementById('quiz-title').innerText = `演習：${subject}`;
-        }
-        
-        currentIndex = 0;
-        score = 0;
-        resultLog = "";
-        startQuiz();
-    }
+    // MIX tile
+    const mix = document.createElement('div');
+    mix.className = 'subject-tile mix-tile';
+    mix.dataset.key = 'MIX';
+    mix.innerHTML = `
+        <i class="fa-solid fa-shuffle"></i>
+        <h3>全科目 MIX</h3>
+        <p>ランダム出題</p>
+        <i class="fa-solid fa-check-circle check"></i>`;
+    mix.addEventListener('click', () => toggleSubject('MIX', mix));
+    if (app.selectedSubjects.has('MIX')) mix.classList.add('selected');
+    el.appendChild(mix);
 
-    function startQuiz() {
-        if (currentQuiz.length === 0) {
-            alert("この科目の問題はまだ登録されていません。");
-            return;
-        }
-        goToSlide('slide-quiz');
-        loadQuestion();
-    }
+    updateAllSubjectsButton();
+    validateSetup();
+}
 
-    function loadQuestion() {
-        const q = currentQuiz[currentIndex];
-        document.getElementById('question-text').innerText = `Q. ${q.question}`;
-        document.getElementById('progress-fill').style.width = `${(currentIndex / currentQuiz.length) * 100}%`;
-        
-        const container = document.getElementById('options-container');
-        container.innerHTML = '';
-        
-        q.options.forEach((opt, idx) => {
-            const btn = document.createElement('button');
-            btn.className = 'option-btn';
-            btn.innerText = opt;
-            btn.onclick = () => handleAnswer(idx, opt);
-            container.appendChild(btn);
+function toggleSubject(key, tile) {
+    if (key === 'MIX') {
+        // MIX: deselect all others and toggle MIX
+        const wasMix = app.selectedSubjects.has('MIX');
+        app.selectedSubjects.clear();
+        if (!wasMix) app.selectedSubjects.add('MIX');
+        document.querySelectorAll('.subject-tile').forEach(t => {
+            t.classList.toggle('selected', t.dataset.key === 'MIX' && !wasMix);
         });
-    }
-
-    function handleAnswer(idx, optText) {
-        const q = currentQuiz[currentIndex];
-        const isCorrect = (idx === q.answer);
-        if (isCorrect) score++;
-
-        resultLog += `【Q${currentIndex + 1}】${isCorrect ? '○' : '×'} 回答: ${optText}\n(正解: ${q.options[q.answer]})\n解説: ${q.explanation}\n\n`;
-
-        currentIndex++;
-        if (currentIndex < currentQuiz.length) {
-            loadQuestion();
+    } else {
+        // Remove MIX if individual subject selected
+        if (app.selectedSubjects.has('MIX')) {
+            app.selectedSubjects.delete('MIX');
+            document.querySelector('.mix-tile')?.classList.remove('selected');
+        }
+        if (app.selectedSubjects.has(key)) {
+            app.selectedSubjects.delete(key);
+            tile.classList.remove('selected');
         } else {
-            finishQuiz();
+            app.selectedSubjects.add(key);
+            tile.classList.add('selected');
+        }
+    }
+    updateAllSubjectsButton();
+    validateSetup();
+}
+
+function toggleAllSubjects() {
+    const tiles = document.querySelectorAll('.subject-tile:not(.disabled):not(.mix-tile)');
+    const allSelected = [...tiles].every(t => app.selectedSubjects.has(t.dataset.key));
+    app.selectedSubjects.delete('MIX');
+    document.querySelector('.mix-tile')?.classList.remove('selected');
+    if (allSelected) {
+        tiles.forEach(t => { app.selectedSubjects.delete(t.dataset.key); t.classList.remove('selected'); });
+    } else {
+        tiles.forEach(t => { app.selectedSubjects.add(t.dataset.key); t.classList.add('selected'); });
+    }
+    updateAllSubjectsButton();
+    validateSetup();
+}
+
+function updateAllSubjectsButton() {
+    const tiles = document.querySelectorAll('.subject-tile:not(.disabled):not(.mix-tile)');
+    const allSel = tiles.length > 0 && [...tiles].every(t => app.selectedSubjects.has(t.dataset.key));
+    document.getElementById('btn-all-subjects').textContent = allSel ? '全科目を解除' : '全科目を選択';
+}
+
+// ── Validation ───────────────────────────────────────────────────────
+function validateSetup() {
+    const email    = document.getElementById('setup-email').value.trim();
+    const emailOK  = email.includes('@') && email.includes('.');
+    const subjectOK = app.selectedSubjects.size > 0;
+    const ok = emailOK && subjectOK;
+    document.getElementById('btn-start').disabled = !ok;
+
+    const err = document.getElementById('setup-error');
+    if (!emailOK && email.length > 0) {
+        err.textContent = 'メールアドレスの形式が正しくありません。';
+        err.style.display = 'block';
+    } else if (!subjectOK && app.selectedSubjects.size === 0 && email.length > 0) {
+        err.textContent = '科目を1つ以上選択してください。';
+        err.style.display = 'block';
+    } else {
+        err.style.display = 'none';
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  Quiz start
+// ═══════════════════════════════════════════════
+async function startQuiz() {
+    const email = document.getElementById('setup-email').value.trim();
+    if (!email || !email.includes('@')) { alert('メールアドレスを入力してください。'); return; }
+    if (!app.selectedSubjects.size)     { alert('科目を1つ以上選択してください。'); return; }
+
+    app.email = email;
+    sessionStorage.setItem('hoiku_email', email);
+
+    // Build question pool
+    let pool = [];
+    const isMIX = app.selectedSubjects.has('MIX');
+    const targets = isMIX ? SUBJECTS.map(s => s.key) : [...app.selectedSubjects];
+
+    // Try JSON datasets first
+    for (const subject of targets) {
+        const matching = app.datasets.filter(d =>
+            d.subject === subject &&
+            (!app.selectedYear || d.year === app.selectedYear)
+        );
+        for (const ds of matching) {
+            try {
+                const res  = await fetch(ds.file);
+                const data = await res.json();
+                data.questions.forEach(q => pool.push({ ...q, _subject: ds.subject, _year: ds.year }));
+            } catch (_) {}
+        }
+        // Fallback
+        if (FALLBACK[subject]) {
+            FALLBACK[subject].questions.forEach(q => pool.push({ ...q, _subject: subject, _year:'サンプル' }));
         }
     }
 
-    function finishQuiz() {
-        document.getElementById('final-score').innerText = score;
-        document.getElementById('accuracy').innerText = Math.round((score / currentQuiz.length) * 100);
-        goToSlide('slide-result');
-    }
+    // Deduplicate by id+subject
+    const seen = new Set();
+    pool = pool.filter(q => {
+        const k = `${q._subject}:${q.id}`;
+        if (seen.has(k)) return false;
+        seen.add(k); return true;
+    });
 
-    async function sendToGAS() {
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        btn.innerText = "送信中...";
+    if (!pool.length) { alert('選択した科目の問題データが見つかりませんでした。'); return; }
 
-        const payload = {
-            email: userEmail,
-            subject: currentSubject, // これを追加
-            score: score,
-            total: currentQuiz.length,
-            details: resultLog
-        };
+    // Shuffle & limit
+    shuffle(pool);
+    if (isFinite(app.questionCount)) pool = pool.slice(0, app.questionCount);
 
-        try {
-            await fetch(GAS_URL, {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-            document.getElementById('status-msg').style.display = 'block';
-            btn.style.display = 'none';
-        } catch (e) {
-            alert("送信に失敗しました。URLを確認してください。");
-            btn.disabled = false;
-            btn.innerText = "結果を再送する";
+    app.quiz        = pool;
+    app.progressIdx = 0;
+    app.viewIdx     = 0;
+    app.score       = 0;
+    app.log         = [];
+    app.selectedOpt = null;
+
+    const subjectLabel = isMIX ? '全科目 MIX'
+        : [...app.selectedSubjects].join('・');
+    document.getElementById('quiz-label').textContent = subjectLabel;
+
+    goToSlide('slide-quiz');
+    renderQuestion();
+}
+
+// ═══════════════════════════════════════════════
+//  Quiz rendering
+// ═══════════════════════════════════════════════
+const NUMS = ['①','②','③','④','⑤','⑥'];
+
+function renderQuestion() {
+    const q        = app.quiz[app.viewIdx];
+    const isReview = app.viewIdx < app.progressIdx;
+    const logEntry = app.log.find(r => r.index === app.viewIdx);
+    const isImm    = app.feedbackMode === 'immediate';
+
+    // Meta
+    document.getElementById('q-meta').textContent =
+        `問題 ${app.viewIdx + 1} / ${app.quiz.length}` + (isReview ? '　(確認中)' : '');
+    document.getElementById('progress-fill').style.width =
+        `${(app.progressIdx / app.quiz.length) * 100}%`;
+
+    // Question
+    document.getElementById('question-text').textContent = q.question;
+    app.selectedOpt = null;
+
+    // Options
+    const container = document.getElementById('options-container');
+    container.innerHTML = '';
+    q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.id        = `opt-${i}`;
+        btn.innerHTML = `<span class="num">${NUMS[i] || (i+1)}</span><span>${opt}</span>`;
+
+        if (isReview && logEntry) {
+            btn.classList.add('locked');
+            if (isImm) {
+                // Immediate mode: show correct/wrong
+                if (i === q.answer)                btn.classList.add('correct');
+                else if (i === logEntry.selected)  btn.classList.add('wrong');
+            } else {
+                // Email mode: just show their selection
+                if (i === logEntry.selected) btn.classList.add('selected');
+            }
+        } else if (!isReview) {
+            btn.addEventListener('click', () => selectOption(i));
         }
+        container.appendChild(btn);
+    });
+
+    // Explanation (immediate mode + review only)
+    const expArea = document.getElementById('explanation-area');
+    if (isReview && logEntry && isImm) {
+        document.getElementById('explanation-text').innerHTML =
+            buildExplanationHTML(q, logEntry.selected, logEntry.isCorrect);
+        expArea.style.display = 'block';
+    } else {
+        expArea.style.display = 'none';
     }
+
+    // Action buttons
+    updateActionButtons(isReview, isImm);
+    document.getElementById('quiz-body').scrollTop = 0;
+}
+
+function updateActionButtons(isReview, isImm) {
+    const btnPrev    = document.getElementById('btn-prev');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const btnRecord  = document.getElementById('btn-record');
+    const btnNext    = document.getElementById('btn-next');
+    const isLast     = app.progressIdx >= app.quiz.length;
+
+    btnPrev.style.display = app.viewIdx > 0 ? 'inline-flex' : 'none';
+
+    if (isReview) {
+        btnConfirm.style.display = 'none';
+        btnRecord.style.display  = 'none';
+        btnNext.style.display    = 'inline-flex';
+        const atFront = app.viewIdx >= app.progressIdx - 1 && isLast;
+        btnNext.innerHTML = atFront
+            ? '<i class="fa-solid fa-flag-checkered"></i> 結果を見る'
+            : 'next <i class="fa-solid fa-arrow-right"></i>';
+        btnNext.innerHTML = (app.viewIdx >= app.progressIdx - 1 && isLast)
+            ? '<i class="fa-solid fa-flag-checkered"></i> 結果を見る'
+            : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+    } else if (isImm) {
+        // Immediate: show confirm, hide others
+        btnConfirm.style.display = 'inline-flex';
+        btnConfirm.disabled      = true;
+        btnRecord.style.display  = 'none';
+        btnNext.style.display    = 'none';
+    } else {
+        // Email mode: show "record & next" button
+        btnConfirm.style.display = 'none';
+        btnRecord.style.display  = 'inline-flex';
+        btnRecord.disabled       = true;
+        btnRecord.innerHTML      = '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+        btnNext.style.display    = 'none';
+    }
+}
+
+function selectOption(i) {
+    if (app.viewIdx !== app.progressIdx) return;
+    app.selectedOpt = i;
+    document.querySelectorAll('.option-btn').forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === i);
+        if (idx === i) btn.querySelector('.num').style.color = 'var(--primary)';
+    });
+    if (app.feedbackMode === 'immediate') {
+        document.getElementById('btn-confirm').disabled = false;
+    } else {
+        const btnRecord = document.getElementById('btn-record');
+        btnRecord.disabled = false;
+        const isLast = (app.progressIdx === app.quiz.length - 1);
+        btnRecord.innerHTML = isLast
+            ? '記録して結果へ <i class="fa-solid fa-flag-checkered"></i>'
+            : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+    }
+}
+
+// ── Immediate mode: confirm ──────────────────────────────────────────
+function confirmAnswer() {
+    if (app.selectedOpt === null || app.viewIdx !== app.progressIdx) return;
+
+    const q         = app.quiz[app.viewIdx];
+    const isCorrect = (app.selectedOpt === q.answer);
+    if (isCorrect) app.score++;
+    logAnswer(q, isCorrect);
+    app.progressIdx++;
+
+    // Colour options
+    document.querySelectorAll('.option-btn').forEach((btn, i) => {
+        btn.classList.add('locked');
+        if (i === q.answer)           btn.classList.add('correct');
+        else if (i === app.selectedOpt) btn.classList.add('wrong');
+    });
+
+    // Show explanation
+    const expArea = document.getElementById('explanation-area');
+    document.getElementById('explanation-text').innerHTML =
+        buildExplanationHTML(q, app.selectedOpt, isCorrect);
+    expArea.style.display = 'block';
+    expArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Switch buttons
+    const isLast = (app.progressIdx >= app.quiz.length);
+    document.getElementById('btn-confirm').style.display = 'none';
+    const btnNext = document.getElementById('btn-next');
+    btnNext.style.display = 'inline-flex';
+    btnNext.innerHTML = isLast
+        ? '<i class="fa-solid fa-flag-checkered"></i> 結果を見る'
+        : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+    document.getElementById('btn-prev').style.display = app.viewIdx > 0 ? 'inline-flex' : 'none';
+
+    app.selectedOpt = null;
+}
+
+// ── Email mode: record & advance ─────────────────────────────────────
+function recordAndNext() {
+    if (app.selectedOpt === null || app.viewIdx !== app.progressIdx) return;
+
+    const q         = app.quiz[app.viewIdx];
+    const isCorrect = (app.selectedOpt === q.answer);
+    if (isCorrect) app.score++;
+    logAnswer(q, isCorrect);
+    app.progressIdx++;
+    app.selectedOpt = null;
+
+    if (app.progressIdx >= app.quiz.length) {
+        finishQuiz();
+    } else {
+        app.viewIdx = app.progressIdx;
+        renderQuestion();
+    }
+}
+
+function logAnswer(q, isCorrect) {
+    app.log.push({
+        index:       app.viewIdx,
+        question:    q.question,
+        options:     q.options,
+        answer:      q.answer,
+        selected:    app.selectedOpt,
+        isCorrect,
+        explanation: q.explanation,
+        subject:     q._subject || '',
+        year:        q._year    || '',
+    });
+}
+
+function nextQuestion() {
+    if (app.viewIdx < app.progressIdx - 1) {
+        app.viewIdx++;
+    } else if (app.progressIdx < app.quiz.length) {
+        app.viewIdx = app.progressIdx;
+    } else {
+        finishQuiz(); return;
+    }
+    app.selectedOpt = null;
+    renderQuestion();
+}
+
+function prevQuestion() {
+    if (app.viewIdx <= 0) return;
+    app.viewIdx--;
+    app.selectedOpt = null;
+    renderQuestion();
+}
+
+function buildExplanationHTML(q, selected, isCorrect) {
+    const badge   = isCorrect
+        ? '<span style="color:var(--success);font-weight:700;">✅ 正解！</span>'
+        : '<span style="color:var(--error);font-weight:700;">❌ 不正解</span>';
+    const correct = `<strong style="color:var(--primary);">正解：${q.options[q.answer]}</strong>`;
+    const yours   = isCorrect ? '' : `　あなたの答え：${q.options[selected]}`;
+    return `${badge}　${correct}${yours}<br><br>${q.explanation}`;
+}
+
+// ═══════════════════════════════════════════════
+//  Result screen
+// ═══════════════════════════════════════════════
+function finishQuiz() {
+    const pct = Math.round((app.score / app.quiz.length) * 100);
+    document.getElementById('final-score').textContent = `${app.score} / ${app.quiz.length}`;
+    document.getElementById('accuracy').textContent    = pct;
+
+    const subjects = [...new Set(app.log.map(r => r.subject))].join('・') || '全科目';
+    document.getElementById('result-meta').textContent =
+        `${subjects}　${app.quiz.length}問`;
+
+    // Email card — always auto-send
+    document.getElementById('email-card-addr').textContent = app.email;
+    document.getElementById('email-sending-msg').style.display = 'none';
+    document.getElementById('email-sent-msg').style.display    = 'none';
+    document.getElementById('email-error-msg').style.display   = 'none';
+
+    sendToGAS();
+
+    goToSlide('slide-result');
+}
+
+async function sendToGAS() {
+    document.getElementById('email-sending-msg').style.display = 'block';
+    document.getElementById('email-sent-msg').style.display    = 'none';
+    document.getElementById('email-error-msg').style.display   = 'none';
+
+    let details = '';
+    app.log.forEach((r, i) => {
+        details += `【Q${i+1}】${r.isCorrect ? '○' : '×'}　${r.question}\n`;
+        details += `  回答: ${r.options[r.selected]}　正解: ${r.options[r.answer]}\n`;
+        details += `  解説: ${r.explanation}\n\n`;
+    });
+
+    const subjects = [...new Set(app.log.map(r => r.subject))].join('・');
+
+    try {
+        // mode:'no-cors' はGASへのPOSTに必須。これがないとブラウザのCORSで弾かれる。
+        // no-corsではレスポンスが読めないが、fetchが解決すれば送信は成功している。
+        await fetch(GAS_URL, {
+            method: 'POST',
+            mode:   'no-cors',
+            body: JSON.stringify({
+                email:        app.email,
+                subject:      subjects,
+                year:         app.selectedYear,
+                score:        app.score,
+                total:        app.quiz.length,
+                feedbackMode: app.feedbackMode,
+                details
+            })
+        });
+        document.getElementById('email-sending-msg').style.display = 'none';
+        document.getElementById('email-sent-msg').style.display    = 'block';
+    } catch (_) {
+        document.getElementById('email-sending-msg').style.display = 'none';
+        document.getElementById('email-error-msg').style.display   = 'block';
+    }
+}
+
+function retryQuiz() {
+    if (app.quiz.length) startQuiz();
+    else goToSlide('slide-setup');
+}
+
+// ── Utility ──────────────────────────────────────────────────────────
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
 </script>
-
 </body>
 </html>

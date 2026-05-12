@@ -1,0 +1,11 @@
+{
+  "datasets": [
+    {
+      "id": "kyoiku_sample",
+      "year": "サンプル",
+      "subject": "教育原理",
+      "file": "data/教育原理_sample.json",
+      "questionCount": 5
+    }
+  ]
+}
