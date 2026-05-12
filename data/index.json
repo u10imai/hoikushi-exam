@@ -6,6 +6,13 @@
       "subject": "教育原理",
       "file": "data/教育原理_sample.json",
       "questionCount": 5
+    },
+    {
+      "id": "shokueiyo_2025前期",
+      "year": "2025前期",
+      "subject": "子どもの食と栄養",
+      "file": "data/子どもの食と栄養_2025前期.json",
+      "questionCount": 20
     }
   ]
 }
