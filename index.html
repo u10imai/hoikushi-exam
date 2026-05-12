@@ -421,6 +421,7 @@
     <!-- Body -->
     <div style="flex: 1; overflow-y: auto;" id="quiz-body">
         <div class="question-box" id="question-text">問題文を読み込み中...</div>
+        <p id="select-counter" style="display:none; font-size:13px; font-weight:700; color:var(--primary); margin:8px 0 4px;"></p>
         <div class="options-list" id="options-container"></div>
         <div id="explanation-area" style="display: none;">
             <div class="explanation-box" id="explanation-text"></div>
@@ -511,12 +512,13 @@ const app = {
     questionCount:   10,       // number or Infinity
     feedbackMode:    "immediate", // "immediate" | "email"
     // Quiz
-    quiz:        [],
-    progressIdx: 0,   // furthest unanswered
-    viewIdx:     0,   // currently displayed
-    selectedOpt: null,
-    score:       0,
-    log:         [],
+    quiz:         [],
+    progressIdx:  0,   // furthest unanswered
+    viewIdx:      0,   // currently displayed
+    selectedOpts: new Set(), // selected option indices
+    selectCount:  1,         // how many must be chosen
+    score:        0,
+    log:          [],
     // Data
     datasets:    [],
 };
@@ -781,12 +783,12 @@ async function startQuiz() {
             try {
                 const res  = await fetch(ds.file);
                 const data = await res.json();
-                data.questions.forEach(q => pool.push({ ...q, _subject: ds.subject, _year: ds.year }));
+                data.questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: ds.subject, _year: ds.year }));
             } catch (_) {}
         }
         // Fallback
         if (FALLBACK[subject]) {
-            FALLBACK[subject].questions.forEach(q => pool.push({ ...q, _subject: subject, _year:'サンプル' }));
+            FALLBACK[subject].questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: subject, _year:'サンプル' }));
         }
     }
 
@@ -804,12 +806,13 @@ async function startQuiz() {
     shuffle(pool);
     if (isFinite(app.questionCount)) pool = pool.slice(0, app.questionCount);
 
-    app.quiz        = pool;
-    app.progressIdx = 0;
-    app.viewIdx     = 0;
-    app.score       = 0;
-    app.log         = [];
-    app.selectedOpt = null;
+    app.quiz         = pool;
+    app.progressIdx  = 0;
+    app.viewIdx      = 0;
+    app.score        = 0;
+    app.log          = [];
+    app.selectedOpts = new Set();
+    app.selectCount  = 1;
 
     const subjectLabel = isMIX ? '全科目 MIX'
         : [...app.selectedSubjects].join('・');
@@ -838,7 +841,17 @@ function renderQuestion() {
 
     // Question
     document.getElementById('question-text').textContent = q.question;
-    app.selectedOpt = null;
+    app.selectedOpts = new Set();
+    app.selectCount  = q.selectCount || 1;
+
+    // Select counter (shown only when active question and selectCount > 1)
+    const counter = document.getElementById('select-counter');
+    if (!isReview && app.selectCount > 1) {
+        counter.textContent  = `${app.selectCount}つ選んでください（0 / ${app.selectCount}）`;
+        counter.style.display = 'block';
+    } else {
+        counter.style.display = 'none';
+    }
 
     // Options
     const container = document.getElementById('options-container');
@@ -853,11 +866,11 @@ function renderQuestion() {
             btn.classList.add('locked');
             if (isImm) {
                 // Immediate mode: show correct/wrong
-                if (i === q.answer)                btn.classList.add('correct');
-                else if (i === logEntry.selected)  btn.classList.add('wrong');
+                if (q.answer.includes(i))              btn.classList.add('correct');
+                else if (logEntry.selected.includes(i)) btn.classList.add('wrong');
             } else {
                 // Email mode: just show their selection
-                if (i === logEntry.selected) btn.classList.add('selected');
+                if (logEntry.selected.includes(i)) btn.classList.add('selected');
             }
         } else if (!isReview) {
             btn.addEventListener('click', () => selectOption(i));
@@ -918,29 +931,53 @@ function updateActionButtons(isReview, isImm) {
 
 function selectOption(i) {
     if (app.viewIdx !== app.progressIdx) return;
-    app.selectedOpt = i;
+
+    // Toggle Set membership
+    if (app.selectedOpts.has(i)) {
+        app.selectedOpts.delete(i);
+    } else {
+        if (app.selectCount === 1) app.selectedOpts.clear(); // single-select: replace
+        if (app.selectedOpts.size < app.selectCount) app.selectedOpts.add(i);
+    }
+
+    // Update option styles
     document.querySelectorAll('.option-btn').forEach((btn, idx) => {
-        btn.classList.toggle('selected', idx === i);
-        if (idx === i) btn.querySelector('.num').style.color = 'var(--primary)';
+        const sel = app.selectedOpts.has(idx);
+        btn.classList.toggle('selected', sel);
+        btn.querySelector('.num').style.color = sel ? 'var(--primary)' : '';
     });
+
+    // Update counter text
+    const counter = document.getElementById('select-counter');
+    if (app.selectCount > 1) {
+        counter.textContent = `${app.selectCount}つ選んでください（${app.selectedOpts.size} / ${app.selectCount}）`;
+    }
+
+    // Enable confirm / record button only when the required number are selected
+    const ready = app.selectedOpts.size === app.selectCount;
     if (app.feedbackMode === 'immediate') {
-        document.getElementById('btn-confirm').disabled = false;
+        document.getElementById('btn-confirm').disabled = !ready;
     } else {
         const btnRecord = document.getElementById('btn-record');
-        btnRecord.disabled = false;
-        const isLast = (app.progressIdx === app.quiz.length - 1);
-        btnRecord.innerHTML = isLast
-            ? '記録して結果へ <i class="fa-solid fa-flag-checkered"></i>'
-            : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+        btnRecord.disabled = !ready;
+        if (ready) {
+            const isLast = (app.progressIdx === app.quiz.length - 1);
+            btnRecord.innerHTML = isLast
+                ? '記録して結果へ <i class="fa-solid fa-flag-checkered"></i>'
+                : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
+        }
     }
 }
 
 // ── Immediate mode: confirm ──────────────────────────────────────────
 function confirmAnswer() {
-    if (app.selectedOpt === null || app.viewIdx !== app.progressIdx) return;
+    if (app.selectedOpts.size === 0 || app.viewIdx !== app.progressIdx) return;
 
-    const q         = app.quiz[app.viewIdx];
-    const isCorrect = (app.selectedOpt === q.answer);
+    const q           = app.quiz[app.viewIdx];
+    const selectedArr = [...app.selectedOpts].sort((a,b) => a-b);
+    const answerArr   = [...q.answer].sort((a,b) => a-b);
+    const isCorrect   = selectedArr.length === answerArr.length &&
+                        selectedArr.every((v, i) => v === answerArr[i]);
     if (isCorrect) app.score++;
     logAnswer(q, isCorrect);
     app.progressIdx++;
@@ -948,14 +985,17 @@ function confirmAnswer() {
     // Colour options
     document.querySelectorAll('.option-btn').forEach((btn, i) => {
         btn.classList.add('locked');
-        if (i === q.answer)           btn.classList.add('correct');
-        else if (i === app.selectedOpt) btn.classList.add('wrong');
+        if (q.answer.includes(i))         btn.classList.add('correct');
+        else if (app.selectedOpts.has(i)) btn.classList.add('wrong');
     });
+
+    // Hide counter
+    document.getElementById('select-counter').style.display = 'none';
 
     // Show explanation
     const expArea = document.getElementById('explanation-area');
     document.getElementById('explanation-text').innerHTML =
-        buildExplanationHTML(q, app.selectedOpt, isCorrect);
+        buildExplanationHTML(q, selectedArr, isCorrect);
     expArea.style.display = 'block';
     expArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
@@ -969,19 +1009,22 @@ function confirmAnswer() {
         : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
     document.getElementById('btn-prev').style.display = app.viewIdx > 0 ? 'inline-flex' : 'none';
 
-    app.selectedOpt = null;
+    app.selectedOpts = new Set();
 }
 
 // ── Email mode: record & advance ─────────────────────────────────────
 function recordAndNext() {
-    if (app.selectedOpt === null || app.viewIdx !== app.progressIdx) return;
+    if (app.selectedOpts.size === 0 || app.viewIdx !== app.progressIdx) return;
 
-    const q         = app.quiz[app.viewIdx];
-    const isCorrect = (app.selectedOpt === q.answer);
+    const q           = app.quiz[app.viewIdx];
+    const selectedArr = [...app.selectedOpts].sort((a,b) => a-b);
+    const answerArr   = [...q.answer].sort((a,b) => a-b);
+    const isCorrect   = selectedArr.length === answerArr.length &&
+                        selectedArr.every((v, i) => v === answerArr[i]);
     if (isCorrect) app.score++;
     logAnswer(q, isCorrect);
     app.progressIdx++;
-    app.selectedOpt = null;
+    app.selectedOpts = new Set();
 
     if (app.progressIdx >= app.quiz.length) {
         finishQuiz();
@@ -996,8 +1039,8 @@ function logAnswer(q, isCorrect) {
         index:       app.viewIdx,
         question:    q.question,
         options:     q.options,
-        answer:      q.answer,
-        selected:    app.selectedOpt,
+        answer:      q.answer,                                   // array (0-indexed)
+        selected:    [...app.selectedOpts].sort((a,b) => a-b),  // array (0-indexed)
         isCorrect,
         explanation: q.explanation,
         subject:     q._subject || '',
@@ -1013,23 +1056,29 @@ function nextQuestion() {
     } else {
         finishQuiz(); return;
     }
-    app.selectedOpt = null;
+    app.selectedOpts = new Set();
     renderQuestion();
 }
 
 function prevQuestion() {
     if (app.viewIdx <= 0) return;
     app.viewIdx--;
-    app.selectedOpt = null;
+    app.selectedOpts = new Set();
     renderQuestion();
 }
 
 function buildExplanationHTML(q, selected, isCorrect) {
-    const badge   = isCorrect
+    // selected and q.answer are both arrays of 0-indexed integers
+    const badge  = isCorrect
         ? '<span style="color:var(--success);font-weight:700;">✅ 正解！</span>'
         : '<span style="color:var(--error);font-weight:700;">❌ 不正解</span>';
-    const correct = `<strong style="color:var(--primary);">正解：${q.options[q.answer]}</strong>`;
-    const yours   = isCorrect ? '' : `　あなたの答え：${q.options[selected]}`;
+    const correctLabels = q.answer.map(i => `${NUMS[i] || (i+1)} ${q.options[i]}`).join('・');
+    const correct = `<strong style="color:var(--primary);">正解：${correctLabels}</strong>`;
+    let yours = '';
+    if (!isCorrect) {
+        const yourLabels = selected.map(i => `${NUMS[i] || (i+1)} ${q.options[i]}`).join('・');
+        yours = `　あなたの答え：${yourLabels}`;
+    }
     return `${badge}　${correct}${yours}<br><br>${q.explanation}`;
 }
 
@@ -1063,8 +1112,10 @@ async function sendToGAS() {
 
     let details = '';
     app.log.forEach((r, i) => {
+        const yourAns  = r.selected.map(j => r.options[j]).join('・');
+        const corrAns  = r.answer.map(j => r.options[j]).join('・');
         details += `【Q${i+1}】${r.isCorrect ? '○' : '×'}　${r.question}\n`;
-        details += `  回答: ${r.options[r.selected]}　正解: ${r.options[r.answer]}\n`;
+        details += `  回答: ${yourAns}　正解: ${corrAns}\n`;
         details += `  解説: ${r.explanation}\n\n`;
     });
 
@@ -1100,6 +1151,14 @@ function retryQuiz() {
 }
 
 // ── Utility ──────────────────────────────────────────────────────────
+/** Ensure q.answer is always an array and q.selectCount is set */
+function normalizeQ(q) {
+    const out = { ...q };
+    if (!Array.isArray(out.answer)) out.answer = [out.answer];
+    if (!out.selectCount) out.selectCount = out.answer.length || 1;
+    return out;
+}
+
 function shuffle(arr) {
     for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));

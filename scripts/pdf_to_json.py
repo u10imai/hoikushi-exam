@@ -62,6 +62,21 @@ INDEX_FILE = DATA_DIR / "index.json"
 CIRCLE_NUMS = {'①':0,'②':1,'③':2,'④':3,'⑤':4,'⑥':5}
 ALPHA_OPTS  = {'A':0,'B':1,'C':2,'D':3,'E':4,'F':5}
 
+# 全角数字 → 半角
+ZENKAKU_TO_HANKAKU = str.maketrans('１２３４５６７８９０', '1234567890')
+
+def detect_select_count(question_text: str) -> int:
+    """問題文から「Nつ選びなさい」のNを取得して返す。見つからなければ1。"""
+    text = question_text.translate(ZENKAKU_TO_HANKAKU)
+    m = re.search(r'([1-9])つ選び', text)
+    if m:
+        return int(m.group(1))
+    # 「2択」「3択」など別表現のフォールバック
+    m2 = re.search(r'([1-9])択', text)
+    if m2:
+        return int(m2.group(1))
+    return 1
+
 def extract_text_from_pdf(pdf_path: Path) -> str:
     """PDFから全テキストを抽出する"""
     text = ""
@@ -71,6 +86,56 @@ def extract_text_from_pdf(pdf_path: Path) -> str:
             if t:
                 text += t + "\n"
     return text
+
+
+def parse_answer_key(text: str) -> dict[int, list[int]]:
+    """
+    別冊（解答）セクションから 問番号 → 正解リスト(0始まり) を返す。
+
+    対応フォーマット例:
+      問1　正解　3
+      問2　正解　1・4
+      問3　正解　1,4
+      問4　正解　①③
+      1  3           ← 単純な「番号+正解番号」テーブル形式
+    """
+    answers: dict[int, list[int]] = {}
+    text_h = text.translate(ZENKAKU_TO_HANKAKU)
+
+    # ── パターンA: 「問N　正解　X(・Y…)」
+    for m in re.finditer(
+        r'問\s*(\d+)[^\n]*?正解[^\n]*?([\d①-⑥][・,，\s①-⑥\d]*)',
+        text_h
+    ):
+        q_no = int(m.group(1))
+        raw  = m.group(2).strip()
+        answers[q_no] = _parse_answer_nums(raw)
+
+    # ── パターンB: 行ごとに「N  M」（問番号 + 正解番号 のシンプルテーブル）
+    # 既にパターンAで取得済みでない問番号のみ補完
+    for m in re.finditer(r'^\s*(\d{1,2})\s+(\d(?:[・,，\s]\d)*)\s*$', text_h, re.MULTILINE):
+        q_no = int(m.group(1))
+        if q_no not in answers:
+            answers[q_no] = _parse_answer_nums(m.group(2).strip())
+
+    return answers
+
+
+def _parse_answer_nums(raw: str) -> list[int]:
+    """
+    '3'  '1・4'  '1,4'  '①③'  '1 4' → 0始まりインデックスのリスト
+    """
+    raw = raw.translate(ZENKAKU_TO_HANKAKU)
+    nums = []
+    # 丸数字を先に変換
+    for ch, idx in CIRCLE_NUMS.items():
+        if ch in raw:
+            nums.append(idx + 1)   # 一旦1始まり番号として保持
+            raw = raw.replace(ch, '')
+    # 残った数字をすべて拾う
+    nums += [int(n) for n in re.findall(r'\d+', raw)]
+    # 重複除去・ソート・0始まりに変換
+    return sorted(set(max(0, n - 1) for n in nums))
 
 def parse_questions_style_a(text: str) -> list[dict]:
     """
@@ -109,9 +174,10 @@ def parse_questions_style_a(text: str) -> list[dict]:
 
         questions.append({
             "id":          len(questions) + 1,
+            "selectCount": detect_select_count(q_text),
             "question":    q_text,
             "options":     opts_list,
-            "answer":      0,        # ← 要手動修正
+            "answer":      [],       # ← 別冊から自動取得 or 要手動修正
             "explanation": ""        # ← 要手動追記
         })
 
@@ -151,9 +217,10 @@ def parse_questions_style_b(text: str) -> list[dict]:
 
         questions.append({
             "id":          len(questions) + 1,
+            "selectCount": detect_select_count(q_text),
             "question":    q_text,
             "options":     opts_list,
-            "answer":      0,        # ← 要手動修正
+            "answer":      [],       # ← 別冊から自動取得 or 要手動修正
             "explanation": ""        # ← 要手動追記
         })
 
@@ -208,6 +275,18 @@ def process_pdf(pdf_path: Path) -> int:
     if not questions:
         print("  ⚠️  問題が検出できませんでした。PDFの形式を確認してください。")
         return 0
+
+    # ── 別冊（解答）を解析して answer を自動設定 ─────────────────────
+    answer_key = parse_answer_key(text)
+    if answer_key:
+        print(f"  📋 別冊から {len(answer_key)} 問分の正解を取得しました")
+        for q in questions:
+            if q["id"] in answer_key:
+                q["answer"] = answer_key[q["id"]]
+        filled = sum(1 for q in questions if q["answer"])
+        print(f"  ✅ {filled} / {len(questions)} 問の正解を自動設定")
+    else:
+        print("  ℹ️  別冊の正解が検出できませんでした。answer は手動で追記してください")
 
     # JSON出力
     out_data = {
@@ -266,8 +345,13 @@ def main():
     print(f"\n{'='*50}")
     print(f"完了！　合計 {total} 問を JSON に変換しました。")
     print()
-    print("⚠️  重要: 各JSONファイルの answer（正解の選択肢番号、0始まり）と")
-    print("   explanation（解説文）を手動で修正・追記してください。")
+    print("⚠️  重要: 各JSONファイルを確認してください")
+    print("   ・selectCount: 問題文から自動検出（1/2/3 択）")
+    print("   ・answer: 別冊から自動取得（0始まりインデックスの配列）")
+    print("            取得できなかった問題は [] のままです → 手動で追記してください")
+    print("   ・explanation: 解説文 → 手動で追記してください")
+    print()
+    print("answer の形式例: [2]（3択目が正解）、[1, 3]（2択目と4択目が正解）")
     print()
     print("JSONファイルの場所: data/")
     print("index.jsonも自動更新されました。")
