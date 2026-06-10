@@ -215,6 +215,7 @@
             font-weight: 600;
             color: var(--primary);
             line-height: 1.7;
+            white-space: pre-wrap;
         }
         .options-list { display: flex; flex-direction: column; gap: 10px; }
         .option-btn {
@@ -253,6 +254,7 @@
             font-size: 15px;
             line-height: 1.8;
             animation: fadeUp .25s ease;
+            white-space: pre-wrap;
         }
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(6px); }
@@ -507,16 +509,16 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbyE-Y0RIRrWDbPWP0OxWqnP
 const app = {
     // Setup
     email:           "",
-    selectedYear:    "",       // "" = all years
-    selectedSubjects: new Set(), // subject keys
-    questionCount:   10,       // number or Infinity
-    feedbackMode:    "immediate", // "immediate" | "email"
+    selectedYear:    "",
+    selectedSubjects: new Set(),
+    questionCount:   10,
+    feedbackMode:    "immediate",
     // Quiz
     quiz:         [],
-    progressIdx:  0,   // furthest unanswered
-    viewIdx:      0,   // currently displayed
-    selectedOpts: new Set(), // selected option indices
-    selectCount:  1,         // how many must be chosen
+    progressIdx:  0,
+    viewIdx:      0,
+    selectedOpts: new Set(),
+    selectCount:  1,
     score:        0,
     log:          [],
     // Data
@@ -525,15 +527,15 @@ const app = {
 
 // ── Subject catalogue ─────────────────────────────────────────────────
 const SUBJECTS = [
-    { key:"教育原理",       icon:"fa-book-open",           desc:"思想・歴史・制度" },
-    { key:"保育原理",       icon:"fa-users-rectangle",     desc:"保育の基本" },
-    { key:"社会的養護",     icon:"fa-heart",               desc:"児童福祉・施設" },
-    { key:"保育の心理学",   icon:"fa-brain",               desc:"発達・学習心理" },
-    { key:"子どもの保健",   icon:"fa-stethoscope",         desc:"健康・疾病・保健" },
-    { key:"子どもの食と栄養", icon:"fa-apple-whole",       desc:"食育・栄養学" },
-    { key:"保育実習理論",   icon:"fa-chalkboard-user",     desc:"実習・表現技術" },
-    { key:"社会福祉",       icon:"fa-hands-holding-child", desc:"福祉制度・法律" },
-    { key:"子ども家庭福祉", icon:"fa-house-chimney-heart", desc:"家庭支援・政策" },
+    { key:"教育原理",         icon:"fa-book-open",           desc:"思想・歴史・制度" },
+    { key:"保育原理",         icon:"fa-users-rectangle",     desc:"保育の基本" },
+    { key:"社会的養護",       icon:"fa-heart",               desc:"児童福祉・施設" },
+    { key:"保育の心理学",     icon:"fa-brain",               desc:"発達・学習心理" },
+    { key:"子どもの保健",     icon:"fa-stethoscope",         desc:"健康・疾病・保健" },
+    { key:"子どもの食と栄養", icon:"fa-apple-whole",         desc:"食育・栄養学" },
+    { key:"保育実習理論",     icon:"fa-chalkboard-user",     desc:"実習・表現技術" },
+    { key:"社会福祉",         icon:"fa-hands-holding-child", desc:"福祉制度・法律" },
+    { key:"子ども家庭福祉",   icon:"fa-house-chimney-heart", desc:"家庭支援・政策" },
 ];
 
 // ── Embedded fallback data ─────────────────────────────────────────────
@@ -560,6 +562,13 @@ const FALLBACK = {
     }
 };
 
+// ── 選択肢テキストから先頭の番号を除去するユーティリティ ──────────────
+// "1 A〇 B〇..." → "A〇 B〇..."
+// "推定平均必要量は..." → そのまま（番号なし選択肢はそのまま）
+function stripLeadingNum(text) {
+    return text.replace(/^\d+\s+/, '');
+}
+
 // ═══════════════════════════════════════════════
 //  Slide navigation
 // ═══════════════════════════════════════════════
@@ -574,7 +583,6 @@ function goToSlide(id) {
 // ═══════════════════════════════════════════════
 async function initSetup() {
     goToSlide('slide-setup');
-    // Restore email if remembered
     const saved = sessionStorage.getItem('hoiku_email');
     if (saved) document.getElementById('setup-email').value = saved;
 
@@ -593,7 +601,6 @@ async function initSetup() {
 }
 
 function initSetupAfterQuiz() {
-    // Keep email and other settings when returning to setup
     document.getElementById('setup-email').value = app.email;
     renderYearChips();
     renderSubjectTiles();
@@ -650,7 +657,6 @@ function renderSubjectTiles() {
             .filter(d => !app.selectedYear || d.year === app.selectedYear)
             .map(d => d.subject)
     );
-    // Also include fallback subjects
     Object.keys(FALLBACK).forEach(k => available.add(k));
 
     const el = document.getElementById('subject-tiles');
@@ -673,7 +679,6 @@ function renderSubjectTiles() {
         el.appendChild(tile);
     });
 
-    // MIX tile
     const mix = document.createElement('div');
     mix.className = 'subject-tile mix-tile';
     mix.dataset.key = 'MIX';
@@ -692,7 +697,6 @@ function renderSubjectTiles() {
 
 function toggleSubject(key, tile) {
     if (key === 'MIX') {
-        // MIX: deselect all others and toggle MIX
         const wasMix = app.selectedSubjects.has('MIX');
         app.selectedSubjects.clear();
         if (!wasMix) app.selectedSubjects.add('MIX');
@@ -700,7 +704,6 @@ function toggleSubject(key, tile) {
             t.classList.toggle('selected', t.dataset.key === 'MIX' && !wasMix);
         });
     } else {
-        // Remove MIX if individual subject selected
         if (app.selectedSubjects.has('MIX')) {
             app.selectedSubjects.delete('MIX');
             document.querySelector('.mix-tile')?.classList.remove('selected');
@@ -768,12 +771,10 @@ async function startQuiz() {
     app.email = email;
     sessionStorage.setItem('hoiku_email', email);
 
-    // Build question pool
     let pool = [];
     const isMIX = app.selectedSubjects.has('MIX');
     const targets = isMIX ? SUBJECTS.map(s => s.key) : [...app.selectedSubjects];
 
-    // Try JSON datasets first
     for (const subject of targets) {
         const matching = app.datasets.filter(d =>
             d.subject === subject &&
@@ -786,13 +787,11 @@ async function startQuiz() {
                 data.questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: ds.subject, _year: ds.year }));
             } catch (_) {}
         }
-        // Fallback
         if (FALLBACK[subject]) {
             FALLBACK[subject].questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: subject, _year:'サンプル' }));
         }
     }
 
-    // Deduplicate by id+subject
     const seen = new Set();
     pool = pool.filter(q => {
         const k = `${q._subject}:${q.id}`;
@@ -802,7 +801,6 @@ async function startQuiz() {
 
     if (!pool.length) { alert('選択した科目の問題データが見つかりませんでした。'); return; }
 
-    // Shuffle & limit
     shuffle(pool);
     if (isFinite(app.questionCount)) pool = pool.slice(0, app.questionCount);
 
@@ -814,8 +812,7 @@ async function startQuiz() {
     app.selectedOpts = new Set();
     app.selectCount  = 1;
 
-    const subjectLabel = isMIX ? '全科目 MIX'
-        : [...app.selectedSubjects].join('・');
+    const subjectLabel = isMIX ? '全科目 MIX' : [...app.selectedSubjects].join('・');
     document.getElementById('quiz-label').textContent = subjectLabel;
 
     goToSlide('slide-quiz');
@@ -833,18 +830,15 @@ function renderQuestion() {
     const logEntry = app.log.find(r => r.index === app.viewIdx);
     const isImm    = app.feedbackMode === 'immediate';
 
-    // Meta
     document.getElementById('q-meta').textContent =
         `問題 ${app.viewIdx + 1} / ${app.quiz.length}` + (isReview ? '　(確認中)' : '');
     document.getElementById('progress-fill').style.width =
         `${(app.progressIdx / app.quiz.length) * 100}%`;
 
-    // Question
     document.getElementById('question-text').textContent = q.question;
     app.selectedOpts = new Set();
     app.selectCount  = q.selectCount || 1;
 
-    // Select counter (shown only when active question and selectCount > 1)
     const counter = document.getElementById('select-counter');
     if (!isReview && app.selectCount > 1) {
         counter.textContent  = `${app.selectCount}つ選んでください（0 / ${app.selectCount}）`;
@@ -853,23 +847,22 @@ function renderQuestion() {
         counter.style.display = 'none';
     }
 
-    // Options
+    // ── [FIX] 選択肢の先頭番号を除去してから表示 ──────────────────
     const container = document.getElementById('options-container');
     container.innerHTML = '';
     q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.id        = `opt-${i}`;
-        btn.innerHTML = `<span class="num">${NUMS[i] || (i+1)}</span><span>${opt}</span>`;
+        const optText = stripLeadingNum(opt);  // ← 修正箇所
+        btn.innerHTML = `<span class="num">${NUMS[i] || (i+1)}</span><span>${optText}</span>`;
 
         if (isReview && logEntry) {
             btn.classList.add('locked');
             if (isImm) {
-                // Immediate mode: show correct/wrong
                 if (q.answer.includes(i))              btn.classList.add('correct');
                 else if (logEntry.selected.includes(i)) btn.classList.add('wrong');
             } else {
-                // Email mode: just show their selection
                 if (logEntry.selected.includes(i)) btn.classList.add('selected');
             }
         } else if (!isReview) {
@@ -878,7 +871,6 @@ function renderQuestion() {
         container.appendChild(btn);
     });
 
-    // Explanation (immediate mode + review only)
     const expArea = document.getElementById('explanation-area');
     if (isReview && logEntry && isImm) {
         document.getElementById('explanation-text').innerHTML =
@@ -888,7 +880,6 @@ function renderQuestion() {
         expArea.style.display = 'none';
     }
 
-    // Action buttons
     updateActionButtons(isReview, isImm);
     document.getElementById('quiz-body').scrollTop = 0;
 }
@@ -906,21 +897,16 @@ function updateActionButtons(isReview, isImm) {
         btnConfirm.style.display = 'none';
         btnRecord.style.display  = 'none';
         btnNext.style.display    = 'inline-flex';
-        const atFront = app.viewIdx >= app.progressIdx - 1 && isLast;
-        btnNext.innerHTML = atFront
-            ? '<i class="fa-solid fa-flag-checkered"></i> 結果を見る'
-            : 'next <i class="fa-solid fa-arrow-right"></i>';
+        // ── [FIX] 二重代入を削除、1回のみ設定 ──────────────────────
         btnNext.innerHTML = (app.viewIdx >= app.progressIdx - 1 && isLast)
             ? '<i class="fa-solid fa-flag-checkered"></i> 結果を見る'
             : '次の問題へ <i class="fa-solid fa-arrow-right"></i>';
     } else if (isImm) {
-        // Immediate: show confirm, hide others
         btnConfirm.style.display = 'inline-flex';
         btnConfirm.disabled      = true;
         btnRecord.style.display  = 'none';
         btnNext.style.display    = 'none';
     } else {
-        // Email mode: show "record & next" button
         btnConfirm.style.display = 'none';
         btnRecord.style.display  = 'inline-flex';
         btnRecord.disabled       = true;
@@ -932,28 +918,24 @@ function updateActionButtons(isReview, isImm) {
 function selectOption(i) {
     if (app.viewIdx !== app.progressIdx) return;
 
-    // Toggle Set membership
     if (app.selectedOpts.has(i)) {
         app.selectedOpts.delete(i);
     } else {
-        if (app.selectCount === 1) app.selectedOpts.clear(); // single-select: replace
+        if (app.selectCount === 1) app.selectedOpts.clear();
         if (app.selectedOpts.size < app.selectCount) app.selectedOpts.add(i);
     }
 
-    // Update option styles
     document.querySelectorAll('.option-btn').forEach((btn, idx) => {
         const sel = app.selectedOpts.has(idx);
         btn.classList.toggle('selected', sel);
         btn.querySelector('.num').style.color = sel ? 'var(--primary)' : '';
     });
 
-    // Update counter text
     const counter = document.getElementById('select-counter');
     if (app.selectCount > 1) {
         counter.textContent = `${app.selectCount}つ選んでください（${app.selectedOpts.size} / ${app.selectCount}）`;
     }
 
-    // Enable confirm / record button only when the required number are selected
     const ready = app.selectedOpts.size === app.selectCount;
     if (app.feedbackMode === 'immediate') {
         document.getElementById('btn-confirm').disabled = !ready;
@@ -982,24 +964,20 @@ function confirmAnswer() {
     logAnswer(q, isCorrect);
     app.progressIdx++;
 
-    // Colour options
     document.querySelectorAll('.option-btn').forEach((btn, i) => {
         btn.classList.add('locked');
         if (q.answer.includes(i))         btn.classList.add('correct');
         else if (app.selectedOpts.has(i)) btn.classList.add('wrong');
     });
 
-    // Hide counter
     document.getElementById('select-counter').style.display = 'none';
 
-    // Show explanation
     const expArea = document.getElementById('explanation-area');
     document.getElementById('explanation-text').innerHTML =
         buildExplanationHTML(q, selectedArr, isCorrect);
     expArea.style.display = 'block';
     expArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-    // Switch buttons
     const isLast = (app.progressIdx >= app.quiz.length);
     document.getElementById('btn-confirm').style.display = 'none';
     const btnNext = document.getElementById('btn-next');
@@ -1039,8 +1017,8 @@ function logAnswer(q, isCorrect) {
         index:       app.viewIdx,
         question:    q.question,
         options:     q.options,
-        answer:      q.answer,                                   // array (0-indexed)
-        selected:    [...app.selectedOpts].sort((a,b) => a-b),  // array (0-indexed)
+        answer:      q.answer,
+        selected:    [...app.selectedOpts].sort((a,b) => a-b),
         isCorrect,
         explanation: q.explanation,
         subject:     q._subject || '',
@@ -1067,16 +1045,22 @@ function prevQuestion() {
     renderQuestion();
 }
 
+// ── [FIX] 解説内の正解・選択肢表示でも先頭番号を除去 ─────────────────
 function buildExplanationHTML(q, selected, isCorrect) {
-    // selected and q.answer are both arrays of 0-indexed integers
-    const badge  = isCorrect
+    const badge = isCorrect
         ? '<span style="color:var(--success);font-weight:700;">✅ 正解！</span>'
         : '<span style="color:var(--error);font-weight:700;">❌ 不正解</span>';
-    const correctLabels = q.answer.map(i => `${NUMS[i] || (i+1)} ${q.options[i]}`).join('・');
+    const correctLabels = q.answer.map(i => {
+        const text = stripLeadingNum(q.options[i]);
+        return `${NUMS[i] || (i+1)} ${text}`;
+    }).join('・');
     const correct = `<strong style="color:var(--primary);">正解：${correctLabels}</strong>`;
     let yours = '';
     if (!isCorrect) {
-        const yourLabels = selected.map(i => `${NUMS[i] || (i+1)} ${q.options[i]}`).join('・');
+        const yourLabels = selected.map(i => {
+            const text = stripLeadingNum(q.options[i]);
+            return `${NUMS[i] || (i+1)} ${text}`;
+        }).join('・');
         yours = `　あなたの答え：${yourLabels}`;
     }
     return `${badge}　${correct}${yours}<br><br>${q.explanation}`;
@@ -1091,17 +1075,14 @@ function finishQuiz() {
     document.getElementById('accuracy').textContent    = pct;
 
     const subjects = [...new Set(app.log.map(r => r.subject))].join('・') || '全科目';
-    document.getElementById('result-meta').textContent =
-        `${subjects}　${app.quiz.length}問`;
+    document.getElementById('result-meta').textContent = `${subjects}　${app.quiz.length}問`;
 
-    // Email card — always auto-send
     document.getElementById('email-card-addr').textContent = app.email;
     document.getElementById('email-sending-msg').style.display = 'none';
     document.getElementById('email-sent-msg').style.display    = 'none';
     document.getElementById('email-error-msg').style.display   = 'none';
 
     sendToGAS();
-
     goToSlide('slide-result');
 }
 
@@ -1112,8 +1093,8 @@ async function sendToGAS() {
 
     let details = '';
     app.log.forEach((r, i) => {
-        const yourAns  = r.selected.map(j => r.options[j]).join('・');
-        const corrAns  = r.answer.map(j => r.options[j]).join('・');
+        const yourAns = r.selected.map(j => stripLeadingNum(r.options[j])).join('・');
+        const corrAns = r.answer.map(j => stripLeadingNum(r.options[j])).join('・');
         details += `【Q${i+1}】${r.isCorrect ? '○' : '×'}　${r.question}\n`;
         details += `  回答: ${yourAns}　正解: ${corrAns}\n`;
         details += `  解説: ${r.explanation}\n\n`;
@@ -1122,8 +1103,6 @@ async function sendToGAS() {
     const subjects = [...new Set(app.log.map(r => r.subject))].join('・');
 
     try {
-        // mode:'no-cors' はGASへのPOSTに必須。これがないとブラウザのCORSで弾かれる。
-        // no-corsではレスポンスが読めないが、fetchが解決すれば送信は成功している。
         await fetch(GAS_URL, {
             method: 'POST',
             mode:   'no-cors',
@@ -1151,7 +1130,6 @@ function retryQuiz() {
 }
 
 // ── Utility ──────────────────────────────────────────────────────────
-/** Ensure q.answer is always an array and q.selectCount is set */
 function normalizeQ(q) {
     const out = { ...q };
     if (!Array.isArray(out.answer)) out.answer = [out.answer];
