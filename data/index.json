@@ -1,10 +1,66 @@
 {
   "datasets": [
     {
-      "id": "shokueiyo_2025前期",
+      "id": "hoiku_2025a",
+      "year": "2025前期",
+      "subject": "保育原理",
+      "file": "data/hoiku_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "hoken_2025a",
+      "year": "2025前期",
+      "subject": "子どもの保健",
+      "file": "data/hoken_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "jisshu_2025a",
+      "year": "2025前期",
+      "subject": "保育実習理論",
+      "file": "data/jisshu_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "kodomo_2025a",
+      "year": "2025前期",
+      "subject": "子ども家庭福祉",
+      "file": "data/kodomo_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "kyoiku_2025a",
+      "year": "2025前期",
+      "subject": "教育原理",
+      "file": "data/kyoiku_2025a.json",
+      "questionCount": 10
+    },
+    {
+      "id": "shakaifukushi_2025a",
+      "year": "2025前期",
+      "subject": "社会福祉",
+      "file": "data/shakaifukushi_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "shakaiteki_2025a",
+      "year": "2025前期",
+      "subject": "社会的養護",
+      "file": "data/shakaiteki_2025a.json",
+      "questionCount": 10
+    },
+    {
+      "id": "shinri_2025a",
+      "year": "2025前期",
+      "subject": "保育の心理学",
+      "file": "data/shinri_2025a.json",
+      "questionCount": 20
+    },
+    {
+      "id": "shokueiyo_2025a",
       "year": "2025前期",
       "subject": "子どもの食と栄養",
-      "file": "data/子どもの食と栄養_2025前期.json",
+      "file": "data/shokueiyo_2025a.json",
       "questionCount": 20
     }
   ]
