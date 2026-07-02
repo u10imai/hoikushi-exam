@@ -899,7 +899,12 @@ function validateSetup() {
 async function startQuiz() {
     const email = document.getElementById('setup-email').value.trim();
     if (!email || !email.includes('@')) { alert('メールアドレスを入力してください。'); return; }
-    if (!app.selectedSubjects.size)     { alert('科目を1つ以上選択してください。'); return; }
+    if (app.selectionMode === 'subject' && !app.selectedSubjects.size) {
+        alert('科目を1つ以上選択してください。'); return;
+    }
+    if (app.selectionMode === 'category' && !app.selectedCategories.size) {
+        alert('カテゴリを1つ以上選択してください。'); return;
+    }
 
     app.email = email;
     sessionStorage.setItem('hoiku_email', email);
