@@ -287,6 +287,19 @@
         /* ── Divider ─────────────────────────────────────────── */
         .divider { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
 
+        /* ── Mode tabs (科目/カテゴリ切替) ───────────────────── */
+        .mode-tab-row { display: flex; background: var(--bg-page); border-radius: 10px; padding: 3px; margin-bottom: 14px; }
+        .mode-tab { flex: 1; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; border: none; background: transparent; color: var(--muted); cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s; }
+        .mode-tab.active { background: var(--white); color: var(--primary); border: 1px solid var(--border); }
+
+        /* ── Category chips ──────────────────────────────────── */
+        .cat-subj-section { margin-bottom: 14px; }
+        .cat-subj-label { font-size: 11px; font-weight: 700; color: var(--muted); margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 5px; text-transform: uppercase; letter-spacing: .06em; }
+        .cat-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+        .cat-chip { padding: 6px 14px; border-radius: 20px; border: 1.5px solid var(--border); font-size: 13px; font-weight: 600; cursor: pointer; color: var(--muted); background: var(--white); transition: all .12s; font-family: inherit; }
+        .cat-chip:hover { border-color: var(--primary); color: var(--primary); }
+        .cat-chip.selected { background: #EBF4FF; border-color: var(--primary); color: var(--primary); }
+
         /* ── Responsive ──────────────────────────────────────── */
         @media (max-width: 768px) {
             .slide { padding: 22px 18px; }
@@ -385,18 +398,38 @@
             </div>
         </div>
 
-        <!-- RIGHT COLUMN : Subject selection -->
+        <!-- RIGHT COLUMN : Subject / Category selection -->
         <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <p class="section-label" style="margin: 0;"><i class="fa-solid fa-book"></i> 科目（複数選択可）</p>
-                <button class="btn btn-ghost btn-sm" onclick="toggleAllSubjects()" id="btn-all-subjects">
-                    全科目を選択
+            <!-- タブ切替 -->
+            <div class="mode-tab-row">
+                <button class="mode-tab active" id="tab-subject" onclick="switchSelectionMode('subject')">
+                    <i class="fa-solid fa-book"></i> 科目で選ぶ
+                </button>
+                <button class="mode-tab" id="tab-category" onclick="switchSelectionMode('category')">
+                    <i class="fa-solid fa-tag"></i> カテゴリで選ぶ
                 </button>
             </div>
-            <div class="subject-grid" id="subject-tiles"></div>
-            <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">
-                ※ データのある科目のみ選択できます
-            </p>
+
+            <!-- 科目ビュー -->
+            <div id="selection-subject-view">
+                <div style="display: flex; justify-content: flex-end; margin-bottom: 8px;">
+                    <button class="btn btn-ghost btn-sm" onclick="toggleAllSubjects()" id="btn-all-subjects">
+                        全科目を選択
+                    </button>
+                </div>
+                <div class="subject-grid" id="subject-tiles"></div>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+                    ※ データのある科目のみ選択できます
+                </p>
+            </div>
+
+            <!-- カテゴリビュー -->
+            <div id="selection-category-view" style="display: none;">
+                <div id="category-tiles" style="overflow-y: auto; max-height: 420px; padding-right: 4px;"></div>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 8px;">
+                    ※ カテゴリをタップして選択（複数選択可）
+                </p>
+            </div>
         </div>
     </div>
 
@@ -513,9 +546,11 @@ const GAS_URL = "https://script.google.com/macros/s/AKfycbyE-Y0RIRrWDbPWP0OxWqnP
 // ── App State ────────────────────────────────────────────────────────
 const app = {
     // Setup
-    email:           "",
-    selectedYear:    "",
-    selectedSubjects: new Set(),
+    email:              "",
+    selectedYear:       "",
+    selectedSubjects:   new Set(),
+    selectionMode:      "subject",   // "subject" | "category"
+    selectedCategories: new Map(),   // Map<subject, Set<category>>
     questionCount:   10,
     feedbackMode:    "immediate",
     // Quiz
@@ -542,6 +577,19 @@ const SUBJECTS = [
     { key:"社会福祉",         icon:"fa-hands-holding-child", desc:"福祉制度・法律" },
     { key:"子ども家庭福祉",   icon:"fa-house-chimney-heart", desc:"家庭支援・政策" },
 ];
+
+// ── Category catalogue ────────────────────────────────────────────────
+const CATEGORIES = {
+    "教育原理":         ["歴史・思想", "教育の制度", "カリキュラム", "法律・制度", "指針・要領等"],
+    "保育原理":         ["指針・要領等", "歴史・思想", "法律・制度", "保育の実践", "統計・調査", "専門職・倫理"],
+    "社会的養護":       ["里親・代替養育", "自立・生活支援", "施設・設備", "法律・制度", "歴史・思想", "指針・要領等"],
+    "保育の心理学":     ["発達の基礎理論", "ライフステージ", "遊びと心理", "心理・発達検査", "障害と支援"],
+    "子どもの保健":     ["発育と発達", "疾病と予防", "安全・事故防止", "法律・制度", "統計・調査", "指針・要領等"],
+    "子どもの食と栄養": ["栄養の基礎知識", "発達と食生活", "食物アレルギー", "食育の推進", "法律・制度", "統計・調査"],
+    "保育実習理論":     ["音楽表現", "造形表現", "言語表現", "保育の実践", "施設・設備"],
+    "社会福祉":         ["社会保障制度", "相談援助の理論", "地域福祉", "法律・制度", "歴史・思想", "専門職・倫理"],
+    "子ども家庭福祉":   ["理念と権利", "児童虐待対策", "子育て支援", "法律・制度", "専門職・倫理", "統計・調査"],
+};
 
 // ── Embedded fallback data ─────────────────────────────────────────────
 const FALLBACK = {
@@ -756,11 +804,80 @@ function updateAllSubjectsButton() {
     document.getElementById('btn-all-subjects').textContent = allSel ? '全科目を解除' : '全科目を選択';
 }
 
+// ── Mode tab switch ──────────────────────────────────────────────────
+function switchSelectionMode(mode) {
+    app.selectionMode = mode;
+    document.getElementById('tab-subject').classList.toggle('active', mode === 'subject');
+    document.getElementById('tab-category').classList.toggle('active', mode === 'category');
+    document.getElementById('selection-subject-view').style.display = mode === 'subject' ? 'block' : 'none';
+    document.getElementById('selection-category-view').style.display = mode === 'category' ? 'block' : 'none';
+    if (mode === 'category') renderCategoryView();
+    validateSetup();
+}
+
+// ── Category view ────────────────────────────────────────────────────
+function renderCategoryView() {
+    const available = new Set(
+        app.datasets
+            .filter(d => !app.selectedYear || d.year === app.selectedYear)
+            .map(d => d.subject)
+    );
+    Object.keys(FALLBACK).forEach(k => available.add(k));
+
+    const el = document.getElementById('category-tiles');
+    el.innerHTML = '';
+
+    SUBJECTS.forEach(s => {
+        if (!available.has(s.key) || !CATEGORIES[s.key]) return;
+        const section = document.createElement('div');
+        section.className = 'cat-subj-section';
+
+        const labelEl = document.createElement('div');
+        labelEl.className = 'cat-subj-label';
+        labelEl.innerHTML = `<i class="fa-solid ${s.icon}"></i> ${s.key}`;
+        section.appendChild(labelEl);
+
+        const chipsEl = document.createElement('div');
+        chipsEl.className = 'cat-chips';
+
+        CATEGORIES[s.key].forEach(cat => {
+            const chip = document.createElement('button');
+            chip.className = 'cat-chip';
+            chip.textContent = cat;
+            const selCats = app.selectedCategories.get(s.key);
+            if (selCats && selCats.has(cat)) chip.classList.add('selected');
+            chip.addEventListener('click', () => toggleCategory(s.key, cat, chip));
+            chipsEl.appendChild(chip);
+        });
+
+        section.appendChild(chipsEl);
+        el.appendChild(section);
+    });
+}
+
+function toggleCategory(subject, category, chip) {
+    if (!app.selectedCategories.has(subject)) {
+        app.selectedCategories.set(subject, new Set());
+    }
+    const cats = app.selectedCategories.get(subject);
+    if (cats.has(category)) {
+        cats.delete(category);
+        chip.classList.remove('selected');
+        if (cats.size === 0) app.selectedCategories.delete(subject);
+    } else {
+        cats.add(category);
+        chip.classList.add('selected');
+    }
+    validateSetup();
+}
+
 // ── Validation ───────────────────────────────────────────────────────
 function validateSetup() {
     const email    = document.getElementById('setup-email').value.trim();
     const emailOK  = email.includes('@') && email.includes('.');
-    const subjectOK = app.selectedSubjects.size > 0;
+    const subjectOK = app.selectionMode === 'subject'
+        ? app.selectedSubjects.size > 0
+        : app.selectedCategories.size > 0;
     const ok = emailOK && subjectOK;
     document.getElementById('btn-start').disabled = !ok;
 
@@ -788,24 +905,55 @@ async function startQuiz() {
     sessionStorage.setItem('hoiku_email', email);
 
     let pool = [];
-    const isMIX = app.selectedSubjects.has('MIX');
-    const targets = isMIX ? SUBJECTS.map(s => s.key) : [...app.selectedSubjects];
+    let quizLabel = '';
 
-    for (const subject of targets) {
-        const matching = app.datasets.filter(d =>
-            d.subject === subject &&
-            (!app.selectedYear || d.year === app.selectedYear)
-        );
-        for (const ds of matching) {
-            try {
-                const res  = await fetch(ds.file);
-                const data = await res.json();
-                data.questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: ds.subject, _year: ds.year }));
-            } catch (_) {}
+    if (app.selectionMode === 'subject') {
+        // ── 科目モード ────────────────────────────────────────
+        const isMIX = app.selectedSubjects.has('MIX');
+        const targets = isMIX ? SUBJECTS.map(s => s.key) : [...app.selectedSubjects];
+        for (const subject of targets) {
+            const matching = app.datasets.filter(d =>
+                d.subject === subject &&
+                (!app.selectedYear || d.year === app.selectedYear)
+            );
+            for (const ds of matching) {
+                try {
+                    const res  = await fetch(ds.file);
+                    const data = await res.json();
+                    data.questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: ds.subject, _year: ds.year }));
+                } catch (_) {}
+            }
+            if (FALLBACK[subject]) {
+                FALLBACK[subject].questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: subject, _year:'サンプル' }));
+            }
         }
-        if (FALLBACK[subject]) {
-            FALLBACK[subject].questions.forEach(q => pool.push({ ...normalizeQ(q), _subject: subject, _year:'サンプル' }));
+        quizLabel = isMIX ? '全科目 MIX' : [...app.selectedSubjects].join('・');
+
+    } else {
+        // ── カテゴリモード ────────────────────────────────────
+        for (const [subject, categories] of app.selectedCategories) {
+            const matching = app.datasets.filter(d =>
+                d.subject === subject &&
+                (!app.selectedYear || d.year === app.selectedYear)
+            );
+            for (const ds of matching) {
+                try {
+                    const res  = await fetch(ds.file);
+                    const data = await res.json();
+                    data.questions
+                        .filter(q => categories.has(q.category))
+                        .forEach(q => pool.push({ ...normalizeQ(q), _subject: ds.subject, _year: ds.year }));
+                } catch (_) {}
+            }
+            if (FALLBACK[subject]) {
+                FALLBACK[subject].questions
+                    .filter(q => categories.has(q.category))
+                    .forEach(q => pool.push({ ...normalizeQ(q), _subject: subject, _year:'サンプル' }));
+            }
         }
+        const catNames = [...app.selectedCategories.values()]
+            .flatMap(cats => [...cats]);
+        quizLabel = catNames.join('・');
     }
 
     const seen = new Set();
@@ -815,7 +963,7 @@ async function startQuiz() {
         seen.add(k); return true;
     });
 
-    if (!pool.length) { alert('選択した科目の問題データが見つかりませんでした。'); return; }
+    if (!pool.length) { alert('選択した条件の問題データが見つかりませんでした。'); return; }
 
     shuffle(pool);
     if (isFinite(app.questionCount)) pool = pool.slice(0, app.questionCount);
@@ -828,8 +976,7 @@ async function startQuiz() {
     app.selectedOpts = new Set();
     app.selectCount  = 1;
 
-    const subjectLabel = isMIX ? '全科目 MIX' : [...app.selectedSubjects].join('・');
-    document.getElementById('quiz-label').textContent = subjectLabel;
+    document.getElementById('quiz-label').textContent = quizLabel;
 
     goToSlide('slide-quiz');
     renderQuestion();
