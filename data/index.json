@@ -62,6 +62,69 @@
       "subject": "子どもの食と栄養",
       "file": "data/shokueiyo_2025a.json",
       "questionCount": 20
+    },
+    {
+      "id": "hoiku_2024b",
+      "year": "2024後期",
+      "subject": "保育原理",
+      "file": "data/hoiku_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "hoken_2024b",
+      "year": "2024後期",
+      "subject": "子どもの保健",
+      "file": "data/hoken_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "jisshu_2024b",
+      "year": "2024後期",
+      "subject": "保育実習理論",
+      "file": "data/jisshu_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "kodomo_2024b",
+      "year": "2024後期",
+      "subject": "子ども家庭福祉",
+      "file": "data/kodomo_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "kyoiku_2024b",
+      "year": "2024後期",
+      "subject": "教育原理",
+      "file": "data/kyoiku_2024b.json",
+      "questionCount": 10
+    },
+    {
+      "id": "shakaifukushi_2024b",
+      "year": "2024後期",
+      "subject": "社会福祉",
+      "file": "data/shakaifukushi_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "shakaiteki_2024b",
+      "year": "2024後期",
+      "subject": "社会的養護",
+      "file": "data/shakaiteki_2024b.json",
+      "questionCount": 10
+    },
+    {
+      "id": "shinri_2024b",
+      "year": "2024後期",
+      "subject": "保育の心理学",
+      "file": "data/shinri_2024b.json",
+      "questionCount": 20
+    },
+    {
+      "id": "shokueiyo_2024b",
+      "year": "2024後期",
+      "subject": "子どもの食と栄養",
+      "file": "data/shokueiyo_2024b.json",
+      "questionCount": 20
     }
   ]
 }
