@@ -183,7 +183,7 @@
         .subject-tile.mix-tile .check { color: var(--white); }
 
         /* ── Feedback mode cards ─────────────────────────────── */
-        .mode-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .mode-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
         .mode-card {
             padding: 20px 18px;
             border-radius: 14px;
@@ -348,8 +348,8 @@
         <!-- LEFT COLUMN -->
         <div style="display: flex; flex-direction: column; gap: 26px;">
 
-            <!-- Email (mandatory) -->
-            <div>
+            <!-- Email (required only for summary_email mode) -->
+            <div id="email-field" style="display:none;">
                 <p class="section-label"><i class="fa-solid fa-envelope"></i> メールアドレス（必須）</p>
                 <input type="email" id="setup-email" class="input-field"
                        placeholder="email@example.com"
@@ -388,9 +388,15 @@
                         <p>回答後すぐに正解と<br>解説を表示する</p>
                         <div class="mode-check"><i class="fa-solid fa-check-circle"></i> 選択中</div>
                     </div>
-                    <div class="mode-card" id="mode-email" onclick="selectMode('email')">
+                    <div class="mode-card" id="mode-summary-screen" onclick="selectMode('summary_screen')">
+                        <i class="fa-solid fa-list-check"></i>
+                        <h3>まとめて確認（画面）</h3>
+                        <p>演習後に解説をまとめて<br>画面に表示する</p>
+                        <div class="mode-check"><i class="fa-solid fa-check-circle"></i> 選択中</div>
+                    </div>
+                    <div class="mode-card" id="mode-summary-email" onclick="selectMode('summary_email')">
                         <i class="fa-solid fa-envelope-open-text"></i>
-                        <h3>メールで確認</h3>
+                        <h3>まとめて確認（メール）</h3>
                         <p>演習後に解説をまとめて<br>メール送信する</p>
                         <div class="mode-check"><i class="fa-solid fa-check-circle"></i> 選択中</div>
                     </div>
@@ -503,7 +509,7 @@
         <p style="font-size: 13px; color: var(--muted); margin-bottom: 24px;" id="result-meta"></p>
 
         <!-- Email send status -->
-        <div style="background: var(--bg-cream); border-radius: 16px; padding: 20px 28px; max-width: 440px; width:100%; margin-bottom: 24px;">
+        <div id="email-card" style="background: var(--bg-cream); border-radius: 16px; padding: 20px 28px; max-width: 440px; width:100%; margin-bottom: 24px;">
             <p style="font-size: 13px; color: var(--muted); margin-bottom: 6px;">送信先</p>
             <p style="font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 14px;" id="email-card-addr"></p>
             <div id="email-sending-msg" style="display:none;">
@@ -524,6 +530,12 @@
                     <i class="fa-solid fa-rotate-right"></i> 再送する
                 </button>
             </div>
+        </div>
+
+        <!-- Summary review (まとめて確認・画面表示) -->
+        <div id="summary-review" style="display:none; text-align:left; width:100%; max-width:720px; margin: 0 auto 24px;">
+            <p class="section-label" style="justify-content:center;"><i class="fa-solid fa-list-check"></i> 解答・解説まとめ</p>
+            <div id="summary-review-list"></div>
         </div>
 
         <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
@@ -711,7 +723,10 @@ function selectCount(btn) {
 function selectMode(mode) {
     app.feedbackMode = mode;
     document.getElementById('mode-immediate').classList.toggle('selected', mode === 'immediate');
-    document.getElementById('mode-email').classList.toggle('selected', mode === 'email');
+    document.getElementById('mode-summary-screen').classList.toggle('selected', mode === 'summary_screen');
+    document.getElementById('mode-summary-email').classList.toggle('selected', mode === 'summary_email');
+    document.getElementById('email-field').style.display = mode === 'summary_email' ? 'block' : 'none';
+    validateSetup();
 }
 
 // ── Subject tiles (multi-select) ─────────────────────────────────────
@@ -873,8 +888,10 @@ function toggleCategory(subject, category, chip) {
 
 // ── Validation ───────────────────────────────────────────────────────
 function validateSetup() {
-    const email    = document.getElementById('setup-email').value.trim();
-    const emailOK  = email.includes('@') && email.includes('.');
+    const email        = document.getElementById('setup-email').value.trim();
+    const emailNeeded   = app.feedbackMode === 'summary_email';
+    const emailFormatOK = email.length === 0 || (email.includes('@') && email.includes('.'));
+    const emailOK       = emailNeeded ? (email.length > 0 && emailFormatOK) : emailFormatOK;
     const subjectOK = app.selectionMode === 'subject'
         ? app.selectedSubjects.size > 0
         : app.selectedCategories.size > 0;
@@ -882,10 +899,13 @@ function validateSetup() {
     document.getElementById('btn-start').disabled = !ok;
 
     const err = document.getElementById('setup-error');
-    if (!emailOK && email.length > 0) {
+    if (emailNeeded && email.length === 0) {
+        err.textContent = 'メールで確認する場合はメールアドレスを入力してください。';
+        err.style.display = 'block';
+    } else if (!emailFormatOK) {
         err.textContent = 'メールアドレスの形式が正しくありません。';
         err.style.display = 'block';
-    } else if (!subjectOK && app.selectedSubjects.size === 0 && email.length > 0) {
+    } else if (!subjectOK) {
         err.textContent = '科目を1つ以上選択してください。';
         err.style.display = 'block';
     } else {
@@ -898,7 +918,9 @@ function validateSetup() {
 // ═══════════════════════════════════════════════
 async function startQuiz() {
     const email = document.getElementById('setup-email').value.trim();
-    if (!email || !email.includes('@')) { alert('メールアドレスを入力してください。'); return; }
+    if (app.feedbackMode === 'summary_email' && (!email || !email.includes('@'))) {
+        alert('メールで確認する場合はメールアドレスを入力してください。'); return;
+    }
     if (app.selectionMode === 'subject' && !app.selectedSubjects.size) {
         alert('科目を1つ以上選択してください。'); return;
     }
@@ -907,7 +929,7 @@ async function startQuiz() {
     }
 
     app.email = email;
-    sessionStorage.setItem('hoiku_email', email);
+    if (email) sessionStorage.setItem('hoiku_email', email);
 
     let pool = [];
     let quizLabel = '';
@@ -1245,13 +1267,45 @@ function finishQuiz() {
     const subjects = [...new Set(app.log.map(r => r.subject))].join('・') || '全科目';
     document.getElementById('result-meta').textContent = `${subjects}　${app.quiz.length}問`;
 
-    document.getElementById('email-card-addr').textContent = app.email;
-    document.getElementById('email-sending-msg').style.display = 'none';
-    document.getElementById('email-sent-msg').style.display    = 'none';
-    document.getElementById('email-error-msg').style.display   = 'none';
+    const isSummaryEmail  = app.feedbackMode === 'summary_email';
+    const isSummaryScreen = app.feedbackMode === 'summary_screen';
 
-    sendToGAS();
+    if (isSummaryEmail) {
+        document.getElementById('email-card').style.display = 'block';
+        document.getElementById('email-card-addr').textContent = app.email;
+        document.getElementById('email-sending-msg').style.display = 'none';
+        document.getElementById('email-sent-msg').style.display    = 'none';
+        document.getElementById('email-error-msg').style.display   = 'none';
+        sendToGAS();
+    } else {
+        document.getElementById('email-card').style.display = 'none';
+    }
+
+    if (isSummaryScreen) {
+        document.getElementById('summary-review-list').innerHTML = buildSummaryReviewHTML();
+        document.getElementById('summary-review').style.display = 'block';
+    } else {
+        document.getElementById('summary-review').style.display = 'none';
+    }
+
     goToSlide('slide-result');
+}
+
+function buildSummaryReviewHTML() {
+    return app.log.map((r, i) => {
+        const yourAns = r.selected.map(j => `${NUMS[j] || (j+1)} ${stripLeadingNum(r.options[j])}`).join('・');
+        const corrAns = r.answer.map(j => `${NUMS[j] || (j+1)} ${stripLeadingNum(r.options[j])}`).join('・');
+        const badge = r.isCorrect
+            ? '<span style="color:var(--success);font-weight:700;">✅ 正解</span>'
+            : '<span style="color:var(--error);font-weight:700;">❌ 不正解</span>';
+        const yours = r.isCorrect ? '' : `　あなたの答え：${yourAns}`;
+        return `
+            <div style="background: var(--bg-cream); border-radius: 14px; padding: 18px 22px; margin-bottom: 14px;">
+                <p style="font-weight:700; color:var(--primary); margin-bottom:10px; white-space:pre-wrap; line-height:1.7;">問${i+1}. ${r.question}</p>
+                <p style="font-size:14px; line-height:1.7;">${badge}　正解：${corrAns}${yours}</p>
+                <div class="explanation-box">${r.explanation}</div>
+            </div>`;
+    }).join('');
 }
 
 async function sendToGAS() {
